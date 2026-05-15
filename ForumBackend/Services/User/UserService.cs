@@ -1,5 +1,6 @@
 using ForumBackend.Contracts.User;
 using ForumBackend.Ef;
+using ForumBackend.Exceptions.User;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -50,7 +51,7 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
         if (user == null)
         {
             logger.LogWarning("User not found: {Uid}", uid);
-            return null;
+            throw new UserNotFoundException($"User with uid {uid} not found");
         }
 
         logger.LogInformation("Finished getting user by uid: {Uid}", uid);
@@ -108,7 +109,7 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
         if (user == null)
         {
             logger.LogWarning("User not found: {Uid}", uid);
-            return null;
+            throw new UserNotFoundException($"User with uid {uid} not found");
         }
 
         user.Name = request.Name;

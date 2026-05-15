@@ -13,6 +13,15 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(context =>
+    {
+        context.Response.StatusCode = 500;
+        return context.Response.WriteAsync("An unexpected fault happened.");
+    });
+});
+
 app.UseSwagger().UseSwaggerUI();
 
 app.MapControllers();

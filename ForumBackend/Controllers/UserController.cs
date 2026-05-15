@@ -1,4 +1,5 @@
 using ForumBackend.Contracts.User;
+using ForumBackend.Filters.User;
 using ForumBackend.Services.User;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,6 +21,7 @@ public class UserController(IUserService userService, ILogger<UserController> lo
         return Ok(users);
     }
 
+    [UserExceptionFilter]
     [HttpGet("{uid:guid}")]
     public async Task<ActionResult<UserResponseContract>> GetByUid([FromRoute] Guid uid,
         CancellationToken cancellationToken)
@@ -54,6 +56,7 @@ public class UserController(IUserService userService, ILogger<UserController> lo
         return CreatedAtAction(nameof(GetByUid), new { uid = createdUser.Uid }, createdUser);
     }
 
+    [UserExceptionFilter]
     [HttpPut("{uid:guid}")]
     public async Task<ActionResult<UserResponseContract>> Update(
         [FromRoute] Guid uid,
@@ -75,6 +78,7 @@ public class UserController(IUserService userService, ILogger<UserController> lo
         return Ok(updatedUser);
     }
 
+    [UserExceptionFilter]
     [HttpDelete("{uid:guid}")]
     public async Task<IActionResult> Delete([FromRoute] Guid uid, CancellationToken cancellationToken)
     {
