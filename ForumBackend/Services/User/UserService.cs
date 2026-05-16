@@ -170,7 +170,7 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
         
         foreach (var comment in user.Comments)
         {
-            comment.UserDeleted = true;
+            comment.WasDeleted = true;
             dbContext.Comments.Update(comment);
         }
 

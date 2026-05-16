@@ -1,4 +1,5 @@
 using ForumBackend.Ef;
+using ForumBackend.Services.Comment;
 using ForumBackend.Services.Post;
 using ForumBackend.Services.User;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +10,7 @@ builder.Services
     .AddDbContext<ForumDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("ForumDb")))
     .AddTransient<IUserService, UserService>()
     .AddTransient<IPostService, PostService>()
+    .AddTransient<ICommentService, CommentService>()
     ;
 
 builder.Services.AddSwaggerGen();

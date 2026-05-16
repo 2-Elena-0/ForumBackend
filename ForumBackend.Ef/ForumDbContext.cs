@@ -65,7 +65,7 @@ public partial class ForumDbContext : DbContext
             entity.Property(e => e.Uid)
                 .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("uid");
-            entity.Property(e => e.UserDeleted).HasColumnName("user_deleted");
+            entity.Property(e => e.WasDeleted).HasColumnName("was_deleted");
 
             entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.Comments)
                 .HasPrincipalKey(p => p.Uid)
