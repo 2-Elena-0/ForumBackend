@@ -1,6 +1,7 @@
 using ForumBackend.Ef;
 using ForumBackend.Services.Comment;
 using ForumBackend.Services.Post;
+using ForumBackend.Services.Topic;
 using ForumBackend.Services.User;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,6 +12,7 @@ builder.Services
     .AddTransient<IUserService, UserService>()
     .AddTransient<IPostService, PostService>()
     .AddTransient<ICommentService, CommentService>()
+    .AddTransient<ITopicService, TopicService>()
     ;
 
 builder.Services.AddSwaggerGen();
