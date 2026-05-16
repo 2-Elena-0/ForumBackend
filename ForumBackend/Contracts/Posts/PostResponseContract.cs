@@ -9,4 +9,6 @@ public class PostResponseContract
     public required DateTimeOffset CreatedAt { get; init; }
     public required long Favorites { get; init; }
     public required long Likes { get; init; }
+    
+    public required bool UserDeleted { get; init; }
 }

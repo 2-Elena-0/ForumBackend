@@ -11,4 +11,7 @@ public class UpdatePostRequestContract
     
     [Required]
     public required string Body { get; init; }
+    
+    [Required]
+    public required bool UserDeleted { get; init; }
 }

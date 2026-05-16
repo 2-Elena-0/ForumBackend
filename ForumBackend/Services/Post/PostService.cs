@@ -19,7 +19,8 @@ public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) 
             Body = x.Body,
             CreatedAt = x.CreatedAt,
             Favorites = x.Favorites,
-            Likes = x.Likes
+            Likes = x.Likes,
+            UserDeleted = x.UserDeleted,
         }).ToArrayAsync(cancellationToken);
 
         logger.LogInformation("Finished getting all users. Posts count: {Count}", posts.Length);
@@ -40,7 +41,8 @@ public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) 
                 Body = x.Body,
                 CreatedAt = x.CreatedAt,
                 Favorites = x.Favorites,
-                Likes = x.Likes
+                Likes = x.Likes,
+                UserDeleted = x.UserDeleted
             })
             .Where(x => x.UserUId == userUid)
             .ToArrayAsync(cancellationToken);
@@ -62,7 +64,8 @@ public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) 
                 Body = x.Body,
                 CreatedAt = x.CreatedAt,
                 Favorites = x.Favorites,
-                Likes = x.Likes
+                Likes = x.Likes,
+                UserDeleted = x.UserDeleted
             })
             .Where(x => x.Uid == uid)
             .SingleOrDefaultAsync(cancellationToken);
@@ -102,7 +105,8 @@ public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) 
             Body = post.Body,
             CreatedAt = post.CreatedAt,
             Favorites = post.Favorites,
-            Likes = post.Likes
+            Likes = post.Likes,
+            UserDeleted = post.UserDeleted
         };
 
         logger.LogInformation("Finished Creating post: {Post}. Response created.", response.Uid);
@@ -125,6 +129,7 @@ public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) 
 
         post.Name = request.Name;
         post.Body = request.Body;
+        post.UserDeleted = request.UserDeleted;
 
         dbContext.Update(post);
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -139,7 +144,8 @@ public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) 
             Body = post.Body,
             CreatedAt = post.CreatedAt,
             Favorites = post.Favorites,
-            Likes = post.Likes
+            Likes = post.Likes,
+            UserDeleted = post.UserDeleted
         };
 
         logger.LogInformation("Finished Updating post: {Post}. Response created.", response.Uid);
