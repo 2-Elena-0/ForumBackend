@@ -1,4 +1,5 @@
 using ForumBackend.Ef;
+using ForumBackend.Services.Post;
 using ForumBackend.Services.User;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,7 +7,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
     .AddDbContext<ForumDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("ForumDb")))
-    .AddTransient<IUserService, UserService>();
+    .AddTransient<IUserService, UserService>()
+    .AddTransient<IPostService, PostService>()
+    ;
 
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
