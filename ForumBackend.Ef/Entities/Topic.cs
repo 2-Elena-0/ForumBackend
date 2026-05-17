@@ -13,7 +13,7 @@ public partial class Topic
 
     public string? Description { get; set; }
 
-    public virtual ICollection<InterestingTopic> InterestingTopics { get; set; } = new List<InterestingTopic>();
+    public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
 
-    public virtual ICollection<PostsTopic> PostsTopics { get; set; } = new List<PostsTopic>();
+    public virtual ICollection<User> Users { get; set; } = new List<User>();
 }

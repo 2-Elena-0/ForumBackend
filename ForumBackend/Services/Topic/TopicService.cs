@@ -111,8 +111,7 @@ public class TopicService(ForumDbContext dbContext, ILogger<TopicService> logger
     {
         logger.LogInformation("Starting deleting topic with uid: {Uid}", uid);
 
-        var topic = await dbContext.Topics.Include(x => x.InterestingTopics).Include(x => x.PostsTopics)
-            .SingleOrDefaultAsync(x => x.Uid == uid, cancellationToken);
+        var topic = await dbContext.Topics.SingleOrDefaultAsync(x => x.Uid == uid, cancellationToken);
 
         if (topic == null)
         {
@@ -120,8 +119,9 @@ public class TopicService(ForumDbContext dbContext, ILogger<TopicService> logger
             return false;
         }
 
-        dbContext.PostsTopics.RemoveRange(topic.PostsTopics);
-        dbContext.InterestingTopics.RemoveRange(topic.InterestingTopics);
+        topic.Posts.Clear();
+        topic.Users.Clear();
+        
         dbContext.Topics.Remove(topic);
 
         await dbContext.SaveChangesAsync(cancellationToken);

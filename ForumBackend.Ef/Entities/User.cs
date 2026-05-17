@@ -29,17 +29,17 @@ public partial class User
 
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
-    public virtual ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
-
-    public virtual ICollection<Follow> FollowFollow1Navigations { get; set; } = new List<Follow>();
-
-    public virtual ICollection<Follow> FollowUserNavigations { get; set; } = new List<Follow>();
-
-    public virtual ICollection<InterestingTopic> InterestingTopics { get; set; } = new List<InterestingTopic>();
-
-    public virtual ICollection<Like> Likes { get; set; } = new List<Like>();
-
     public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
 
     public virtual Role RoleNavigation { get; set; } = null!;
+
+    public virtual ICollection<User> FollowersNavigation { get; set; } = new List<User>();
+
+    public virtual ICollection<User> Follows { get; set; } = new List<User>();
+
+    public virtual ICollection<Post> PostFavorites { get; set; } = new List<Post>();
+
+    public virtual ICollection<Post> PostLikes { get; set; } = new List<Post>();
+
+    public virtual ICollection<Topic> Topics { get; set; } = new List<Topic>();
 }

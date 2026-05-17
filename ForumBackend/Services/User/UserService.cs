@@ -145,22 +145,17 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
     {
         logger.LogInformation("Starting user deletion. UserUid: {UserUid}.", uid);
 
-        var user = await dbContext.Users.Include(x => x.Comments).Include(x => x.Posts)
-            .Include(x => x.InterestingTopics).Include(x => x.Favorites).Include(x => x.Likes)
-            .Include(x => x.FollowUserNavigations).Include(x => x.FollowFollow1Navigations)
-            .SingleOrDefaultAsync(x => x.Uid == uid, cancellationToken);
-
+        var user = await dbContext.Users.Include(x => x.Comments).Include(x => x.Posts).SingleOrDefaultAsync(x => x.Uid == uid, cancellationToken);
         if (user == null)
         {
             logger.LogWarning("User not found: {Uid}", uid);
             return false;
         }
 
-        dbContext.Likes.RemoveRange(user.Likes);
-        dbContext.Favorites.RemoveRange(user.Favorites);
-        dbContext.InterestingTopics.RemoveRange(user.InterestingTopics);
-        dbContext.Follows.RemoveRange(user.FollowUserNavigations);
-        dbContext.Follows.RemoveRange(user.FollowFollow1Navigations);
+        user.PostLikes.Clear();
+        user.PostFavorites.Clear();
+        user.Follows.Clear();
+        user.Topics.Clear();
         dbContext.Users.Remove(user);
 
         await dbContext.SaveChangesAsync(cancellationToken); 

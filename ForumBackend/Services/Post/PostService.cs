@@ -157,20 +157,22 @@ public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) 
     {
         logger.LogInformation("Starting post deletion. Post uId: {uId}", uid);
 
-        var post = await dbContext.Posts.Include(x => x.Comments).Include(x => x.FavoritesNavigation)
-            .Include(x => x.LikesNavigation).Include(x => x.PostsTopics)
-            .SingleOrDefaultAsync(x => x.Uid == uid, cancellationToken);
+        var post = dbContext.Posts.Include(x => x.Topics).Include(x => x.Likes).Include(x => x.Favorites)
+            .Include(x => x.Comments).SingleOrDefault(x => x.Uid == uid);
 
         if (post == null)
         {
             logger.LogWarning("Post with {uId} not found", uid);
             return false;
         }
-
+        
+        post.Topics.Clear();
+        post.Comments.Clear();
+        post.UserFavorites.Clear();
+        post.UserLikes.Clear();
+        
         dbContext.Comments.RemoveRange(post.Comments);
-        dbContext.Favorites.RemoveRange(post.FavoritesNavigation);
-        dbContext.Likes.RemoveRange(post.LikesNavigation);
-        dbContext.PostsTopics.RemoveRange(post.PostsTopics);
+        
         dbContext.Posts.Remove(post);
 
         await dbContext.SaveChangesAsync(cancellationToken);

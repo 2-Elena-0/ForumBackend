@@ -18,17 +18,7 @@ public partial class ForumDbContext : DbContext
 
     public virtual DbSet<Comment> Comments { get; set; }
 
-    public virtual DbSet<Favorite> Favorites { get; set; }
-
-    public virtual DbSet<Follow> Follows { get; set; }
-
-    public virtual DbSet<InterestingTopic> InterestingTopics { get; set; }
-
-    public virtual DbSet<Like> Likes { get; set; }
-
     public virtual DbSet<Post> Posts { get; set; }
-
-    public virtual DbSet<PostsTopic> PostsTopics { get; set; }
 
     public virtual DbSet<Role> Roles { get; set; }
 
@@ -85,106 +75,6 @@ public partial class ForumDbContext : DbContext
                 .HasConstraintName("comments_comments_fk");
         });
 
-        modelBuilder.Entity<Favorite>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("favorites_pk");
-
-            entity.ToTable("favorites", "Forum");
-
-            entity.Property(e => e.Id)
-                .UseIdentityAlwaysColumn()
-                .HasColumnName("id");
-            entity.Property(e => e.Post).HasColumnName("post");
-            entity.Property(e => e.User).HasColumnName("user");
-
-            entity.HasOne(d => d.PostNavigation).WithMany(p => p.FavoritesNavigation)
-                .HasPrincipalKey(p => p.Uid)
-                .HasForeignKey(d => d.Post)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("favorites_posts_fk");
-
-            entity.HasOne(d => d.UserNavigation).WithMany(p => p.Favorites)
-                .HasPrincipalKey(p => p.Uid)
-                .HasForeignKey(d => d.User)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("favorites_users_fk");
-        });
-
-        modelBuilder.Entity<Follow>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("follows_pk");
-
-            entity.ToTable("follows", "Forum");
-
-            entity.Property(e => e.Id)
-                .UseIdentityAlwaysColumn()
-                .HasColumnName("id");
-            entity.Property(e => e.Follow1).HasColumnName("follow");
-            entity.Property(e => e.User).HasColumnName("user");
-
-            entity.HasOne(d => d.Follow1Navigation).WithMany(p => p.FollowFollow1Navigations)
-                .HasPrincipalKey(p => p.Uid)
-                .HasForeignKey(d => d.Follow1)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("follows_users_fk_1");
-
-            entity.HasOne(d => d.UserNavigation).WithMany(p => p.FollowUserNavigations)
-                .HasPrincipalKey(p => p.Uid)
-                .HasForeignKey(d => d.User)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("follows_users_fk");
-        });
-
-        modelBuilder.Entity<InterestingTopic>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("interesting_topics_pk");
-
-            entity.ToTable("interesting_topics", "Forum");
-
-            entity.Property(e => e.Id)
-                .UseIdentityAlwaysColumn()
-                .HasColumnName("id");
-            entity.Property(e => e.Topic).HasColumnName("topic");
-            entity.Property(e => e.User).HasColumnName("user");
-
-            entity.HasOne(d => d.TopicNavigation).WithMany(p => p.InterestingTopics)
-                .HasPrincipalKey(p => p.Uid)
-                .HasForeignKey(d => d.Topic)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("interesting_topics_topic_fk");
-
-            entity.HasOne(d => d.UserNavigation).WithMany(p => p.InterestingTopics)
-                .HasPrincipalKey(p => p.Uid)
-                .HasForeignKey(d => d.User)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("interesting_topics_users_fk");
-        });
-
-        modelBuilder.Entity<Like>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("likes_pk");
-
-            entity.ToTable("likes", "Forum");
-
-            entity.Property(e => e.Id)
-                .UseIdentityAlwaysColumn()
-                .HasColumnName("id");
-            entity.Property(e => e.Post).HasColumnName("post");
-            entity.Property(e => e.User).HasColumnName("user");
-
-            entity.HasOne(d => d.UserNavigation).WithMany(p => p.LikesNavigation)
-                .HasPrincipalKey(p => p.Uid)
-                .HasForeignKey(d => d.User)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("likes_posts_fk");
-
-            entity.HasOne(d => d.User1).WithMany(p => p.Likes)
-                .HasPrincipalKey(p => p.Uid)
-                .HasForeignKey(d => d.User)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("likes_users_fk");
-        });
-
         modelBuilder.Entity<Post>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("posts_pk");
@@ -217,31 +107,27 @@ public partial class ForumDbContext : DbContext
                 .HasForeignKey(d => d.CreatedBy)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("posts_users_fk");
-        });
 
-        modelBuilder.Entity<PostsTopic>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("posts_topic_pk");
-
-            entity.ToTable("posts_topic", "Forum");
-
-            entity.Property(e => e.Id)
-                .UseIdentityAlwaysColumn()
-                .HasColumnName("id");
-            entity.Property(e => e.Post).HasColumnName("post");
-            entity.Property(e => e.Topic).HasColumnName("topic");
-
-            entity.HasOne(d => d.PostNavigation).WithMany(p => p.PostsTopics)
-                .HasPrincipalKey(p => p.Uid)
-                .HasForeignKey(d => d.Post)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("posts_topic_posts_fk");
-
-            entity.HasOne(d => d.TopicNavigation).WithMany(p => p.PostsTopics)
-                .HasPrincipalKey(p => p.Uid)
-                .HasForeignKey(d => d.Topic)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("posts_topic_topic_fk");
+            entity.HasMany(d => d.Topics).WithMany(p => p.Posts)
+                .UsingEntity<Dictionary<string, object>>(
+                    "PostsTopic",
+                    r => r.HasOne<Topic>().WithMany()
+                        .HasPrincipalKey("Uid")
+                        .HasForeignKey("Topic")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("posts_topic_topic_fk"),
+                    l => l.HasOne<Post>().WithMany()
+                        .HasPrincipalKey("Uid")
+                        .HasForeignKey("Post")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("posts_topic_posts_fk"),
+                    j =>
+                    {
+                        j.HasKey("Post", "Topic").HasName("posts_topic_pk");
+                        j.ToTable("posts_topic", "Forum");
+                        j.IndexerProperty<Guid>("Post").HasColumnName("post");
+                        j.IndexerProperty<Guid>("Topic").HasColumnName("topic");
+                    });
         });
 
         modelBuilder.Entity<Role>(entity =>
@@ -337,6 +223,111 @@ public partial class ForumDbContext : DbContext
                 .HasForeignKey(d => d.Role)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("users_role_fk");
+
+            entity.HasMany(d => d.FollowersNavigation).WithMany(p => p.Follows)
+                .UsingEntity<Dictionary<string, object>>(
+                    "UserFollow",
+                    r => r.HasOne<User>().WithMany()
+                        .HasPrincipalKey("Uid")
+                        .HasForeignKey("Follower")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("follows_users_fk"),
+                    l => l.HasOne<User>().WithMany()
+                        .HasPrincipalKey("Uid")
+                        .HasForeignKey("Follow")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("follows_users_fk_1"),
+                    j =>
+                    {
+                        j.HasKey("Follow", "Follower").HasName("user_follow_pk");
+                        j.ToTable("user_follow", "Forum");
+                        j.IndexerProperty<Guid>("Follow").HasColumnName("follow");
+                        j.IndexerProperty<Guid>("Follower").HasColumnName("follower");
+                    });
+
+            entity.HasMany(d => d.Follows).WithMany(p => p.FollowersNavigation)
+                .UsingEntity<Dictionary<string, object>>(
+                    "UserFollow",
+                    r => r.HasOne<User>().WithMany()
+                        .HasPrincipalKey("Uid")
+                        .HasForeignKey("Follow")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("follows_users_fk_1"),
+                    l => l.HasOne<User>().WithMany()
+                        .HasPrincipalKey("Uid")
+                        .HasForeignKey("Follower")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("follows_users_fk"),
+                    j =>
+                    {
+                        j.HasKey("Follow", "Follower").HasName("user_follow_pk");
+                        j.ToTable("user_follow", "Forum");
+                        j.IndexerProperty<Guid>("Follow").HasColumnName("follow");
+                        j.IndexerProperty<Guid>("Follower").HasColumnName("follower");
+                    });
+
+            entity.HasMany(d => d.PostFavorites).WithMany(p => p.UserFavorites)
+                .UsingEntity<Dictionary<string, object>>(
+                    "Favorite",
+                    r => r.HasOne<Post>().WithMany()
+                        .HasPrincipalKey("Uid")
+                        .HasForeignKey("PostFavorite")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("favorites_posts_fk"),
+                    l => l.HasOne<User>().WithMany()
+                        .HasPrincipalKey("Uid")
+                        .HasForeignKey("UserFavorite")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("favorites_users_fk"),
+                    j =>
+                    {
+                        j.HasKey("UserFavorite", "PostFavorite").HasName("favorites_pk");
+                        j.ToTable("favorites", "Forum");
+                        j.IndexerProperty<Guid>("UserFavorite").HasColumnName("user_favorite");
+                        j.IndexerProperty<Guid>("PostFavorite").HasColumnName("post_favorite");
+                    });
+
+            entity.HasMany(d => d.PostLikes).WithMany(p => p.UserLikes)
+                .UsingEntity<Dictionary<string, object>>(
+                    "Like",
+                    r => r.HasOne<Post>().WithMany()
+                        .HasPrincipalKey("Uid")
+                        .HasForeignKey("PostLike")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("likes_posts_fk"),
+                    l => l.HasOne<User>().WithMany()
+                        .HasPrincipalKey("Uid")
+                        .HasForeignKey("UserLike")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("likes_users_fk"),
+                    j =>
+                    {
+                        j.HasKey("UserLike", "PostLike").HasName("likes_pk");
+                        j.ToTable("likes", "Forum");
+                        j.IndexerProperty<Guid>("UserLike").HasColumnName("user_like");
+                        j.IndexerProperty<Guid>("PostLike").HasColumnName("post_like");
+                    });
+
+            entity.HasMany(d => d.Topics).WithMany(p => p.Users)
+                .UsingEntity<Dictionary<string, object>>(
+                    "InterestingTopic",
+                    r => r.HasOne<Topic>().WithMany()
+                        .HasPrincipalKey("Uid")
+                        .HasForeignKey("Topic")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("interesting_topics_topic_fk"),
+                    l => l.HasOne<User>().WithMany()
+                        .HasPrincipalKey("Uid")
+                        .HasForeignKey("User")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("interesting_topics_users_fk"),
+                    j =>
+                    {
+                        j.HasKey("User", "Topic").HasName("interesting_topics_pk");
+                        j.ToTable("interesting_topics", "Forum");
+                        j.IndexerProperty<Guid>("User").HasColumnName("user");
+                        j.IndexerProperty<Guid>("Topic").HasColumnName("topic");
+                    });
         });
 
         OnModelCreatingPartial(modelBuilder);

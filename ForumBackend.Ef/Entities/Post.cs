@@ -27,9 +27,9 @@ public partial class Post
 
     public virtual User CreatedByNavigation { get; set; } = null!;
 
-    public virtual ICollection<Favorite> FavoritesNavigation { get; set; } = new List<Favorite>();
+    public virtual ICollection<Topic> Topics { get; set; } = new List<Topic>();
 
-    public virtual ICollection<Like> LikesNavigation { get; set; } = new List<Like>();
+    public virtual ICollection<User> UserFavorites { get; set; } = new List<User>();
 
-    public virtual ICollection<PostsTopic> PostsTopics { get; set; } = new List<PostsTopic>();
+    public virtual ICollection<User> UserLikes { get; set; } = new List<User>();
 }
