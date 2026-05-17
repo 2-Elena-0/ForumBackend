@@ -14,5 +14,7 @@ public interface IPostService
 
     Task<PostResponseContract?> UpdateAsync(Guid uid, UpdatePostRequestContract request, CancellationToken cancellationToken);
 
+    Task<PostResponseContract?> AddTopicToPostAsync(Guid postUid, Guid topicUid, UpdatePostRequestContract request, CancellationToken cancellationToken);
+    
     Task<bool> DeleteAsync(Guid uid, CancellationToken cancellationToken);
 }

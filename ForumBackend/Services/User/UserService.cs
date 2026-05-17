@@ -1,6 +1,8 @@
 using ForumBackend.Contracts.User;
 using ForumBackend.Ef;
+using ForumBackend.Exceptions.Topic;
 using ForumBackend.Exceptions.User;
+using ForumBackend.Filters.Post;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -141,11 +143,191 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
         return response;
     }
 
+    public async Task<UserResponseContract?> AddLikePostAsync(Guid userUid, Guid postUid,
+        UpdateUserRequestContract request,
+        CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Starting add like post with uid {postUid} to user {userUid}", postUid, userUid);
+
+        var user = dbContext.Users.SingleOrDefault(x => x.Uid == userUid);
+
+        if (user == null)
+        {
+            logger.LogWarning("User not found: {Uid}", userUid);
+            throw new UserNotFoundException($"User with uid {userUid} not found");
+        }
+
+        var post = dbContext.Posts.SingleOrDefault(x => x.Uid == postUid);
+
+        if (post == null)
+        {
+            logger.LogWarning("Post not found: {PostUid}", postUid);
+            throw new PostNotFoundException($"Post with uid {postUid} not found");
+        }
+
+        user.PostLikes.Add(post);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation("Ending add like post to user");
+
+        var response = new UserResponseContract
+        {
+            Uid = user.Uid,
+            Name = user.Name,
+            Email = user.Email,
+            AvatarUrl = user.AvatarImage ?? "",
+            Description = user.Description ?? "",
+            CreatedAt = user.CreatedAt,
+            FollowersCount = user.Followers,
+            Role = user.Role,
+            RoleGet = user.RoleGet
+        };
+
+        logger.LogInformation("Finished add like post to user");
+
+        return response;
+    }
+
+    public async Task<UserResponseContract?> AddFavoritePostAsync(Guid userUid, Guid postUid,
+        UpdateUserRequestContract request,
+        CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Starting add favorite post with uid {postUid} to user {userUid}", postUid, userUid);
+
+        var user = dbContext.Users.SingleOrDefault(x => x.Uid == userUid);
+
+        if (user == null)
+        {
+            logger.LogWarning("User not found: {Uid}", userUid);
+            throw new UserNotFoundException($"User with uid {userUid} not found");
+        }
+
+        var post = dbContext.Posts.SingleOrDefault(x => x.Uid == postUid);
+
+        if (post == null)
+        {
+            logger.LogWarning("Post not found: {PostUid}", postUid);
+            throw new PostNotFoundException($"Post with uid {postUid} not found");
+        }
+
+        user.PostFavorites.Add(post);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation("Ending add favorite post to user");
+
+        var response = new UserResponseContract
+        {
+            Uid = user.Uid,
+            Name = user.Name,
+            Email = user.Email,
+            AvatarUrl = user.AvatarImage ?? "",
+            Description = user.Description ?? "",
+            CreatedAt = user.CreatedAt,
+            FollowersCount = user.Followers,
+            Role = user.Role,
+            RoleGet = user.RoleGet
+        };
+
+        logger.LogInformation("Finished add favorite post to user");
+
+        return response;
+    }
+
+    public async Task<UserResponseContract?> AddFollowAsync(Guid userFollowerUid, Guid followUid,
+        UpdateUserRequestContract request,
+        CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Starting add follow user with uid {followUid} to user {userFollowerUid}", followUid,
+            userFollowerUid);
+
+        var user = dbContext.Users.SingleOrDefault(x => x.Uid == userFollowerUid);
+
+        if (user == null)
+        {
+            logger.LogWarning("User not found: {Uid}", userFollowerUid);
+            throw new UserNotFoundException($"User with uid {userFollowerUid} not found");
+        }
+        
+        var userFollow = dbContext.Users.SingleOrDefault(x => x.Uid == followUid);
+
+        if (userFollow == null)
+        {
+            logger.LogWarning("Follow not found: {FollowUid}", followUid);
+            throw new UserNotFoundException($"Follow with uid {followUid} not found");
+        }
+        
+        user.Follows.Add(userFollow);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        
+        logger.LogInformation("Ending add follow user to user");
+        
+        var response = new UserResponseContract
+        {
+            Uid = user.Uid,
+            Name = user.Name,
+            Email = user.Email,
+            AvatarUrl = user.AvatarImage ?? "",
+            Description = user.Description ?? "",
+            CreatedAt = user.CreatedAt,
+            FollowersCount = user.Followers,
+            Role = user.Role,
+            RoleGet = user.RoleGet
+        };
+        
+        logger.LogInformation("Finished add follow user to user");
+        
+        return response;
+    }
+
+    public async Task<UserResponseContract?> InterestingTopic(Guid userUid, Guid topicUid,
+        UpdateUserRequestContract request,
+        CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Starting add Interesting topic with uid: {topicUid} to user {userUid}",  topicUid, userUid);
+        
+        var user = dbContext.Users.SingleOrDefault(x => x.Uid == userUid);
+        if (user == null)
+        {
+            logger.LogWarning("User not found: {Uid}", userUid);
+            throw new UserNotFoundException($"User with uid {userUid} not found");
+        }
+        
+        var topic = dbContext.Topics.SingleOrDefault(x => x.Uid == topicUid);
+        if (topic == null)
+        {
+            logger.LogWarning("Topic not found: {TopicUid}", topicUid);
+            throw new TopicNotFoundException($"Topic with uid {topicUid} not found");
+        }
+        
+        user.Topics.Add(topic);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        
+        logger.LogInformation("Ending add Interesting topic to user");
+        
+        var response = new UserResponseContract
+        {
+            Uid = user.Uid,
+            Name = user.Name,
+            Email = user.Email,
+            AvatarUrl = user.AvatarImage ?? "",
+            Description = user.Description ?? "",
+            CreatedAt = user.CreatedAt,
+            FollowersCount = user.Followers,
+            Role = user.Role,
+            RoleGet = user.RoleGet
+        };
+        
+        logger.LogInformation("Finished add Interesting topic to user");
+        
+        return response;
+    }
+
     public async Task<bool> DeleteAsync(Guid uid, CancellationToken cancellationToken)
     {
         logger.LogInformation("Starting user deletion. UserUid: {UserUid}.", uid);
 
-        var user = await dbContext.Users.Include(x => x.Comments).Include(x => x.Posts).SingleOrDefaultAsync(x => x.Uid == uid, cancellationToken);
+        var user = await dbContext.Users.Include(x => x.Comments).Include(x => x.Posts)
+            .SingleOrDefaultAsync(x => x.Uid == uid, cancellationToken);
         if (user == null)
         {
             logger.LogWarning("User not found: {Uid}", uid);
@@ -158,11 +340,11 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
         user.Topics.Clear();
         dbContext.Users.Remove(user);
 
-        await dbContext.SaveChangesAsync(cancellationToken); 
-        
+        await dbContext.SaveChangesAsync(cancellationToken);
+
         logger.LogInformation("Deleted user {Uid}'s likes, favorites, interesting topics and follows", user.Uid);
 
-        
+
         foreach (var comment in user.Comments)
         {
             comment.WasDeleted = true;
@@ -175,8 +357,8 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
             dbContext.Posts.Update(post);
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken); 
-        
+        await dbContext.SaveChangesAsync(cancellationToken);
+
         logger.LogInformation("Deleting was ended");
         return true;
     }

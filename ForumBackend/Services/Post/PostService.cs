@@ -1,5 +1,6 @@
 using ForumBackend.Contracts.Posts;
 using ForumBackend.Ef;
+using ForumBackend.Exceptions.Topic;
 using ForumBackend.Filters.Post;
 using Microsoft.EntityFrameworkCore;
 
@@ -150,6 +151,47 @@ public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) 
 
         logger.LogInformation("Finished Updating post: {Post}. Response created.", response.Uid);
 
+        return response;
+    }
+
+    public async Task<PostResponseContract?> AddTopicToPostAsync(Guid postUid, Guid topicUid, UpdatePostRequestContract request,
+        CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Starting add topic {topicUid} to post {postUid}", topicUid, postUid);
+        
+        var post = dbContext.Posts.SingleOrDefault(x => x.Uid == postUid);
+        if (post == null)
+        {
+            logger.LogWarning("Post with uId {Uid} not found", postUid);
+            throw new PostNotFoundException($"Post with uId {postUid} not found");
+        }
+        
+        var topic = dbContext.Topics.SingleOrDefault(x => x.Uid == topicUid);
+        if (topic == null)
+        {
+            logger.LogWarning("Topic with uId {Uid} not found", topicUid);
+            throw new TopicNotFoundException($"Topic with uId {topicUid} not found");
+        }
+        
+        post.Topics.Add(topic);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        
+        logger.LogInformation("Finished add topic: {Topic}. Response created.", topicUid);
+        
+        var response = new PostResponseContract
+        {
+            Uid = post.Uid,
+            UserUId = post.CreatedBy,
+            Name = post.Name,
+            Body = post.Body,
+            CreatedAt = post.CreatedAt,
+            Favorites = post.Favorites,
+            Likes = post.Likes,
+            UserDeleted = post.UserDeleted
+        };
+        
+        logger.LogInformation("Finished add topic: {Topic}. Response created.", response.Uid);
+        
         return response;
     }
 
