@@ -7,21 +7,26 @@ namespace ForumBackend.Services.Comment;
 
 public class CommentService(ForumDbContext dbContext, ILogger<CommentService> logger) : ICommentService
 {
+    private CommentResponseContract CreateResponse(Ef.Entities.Comment comment)
+    {
+        return new CommentResponseContract
+        {
+            Uid = comment.Uid,
+            Body = comment.Body,
+            CreatedAt = comment.CreatedAt,
+            Likes = comment.Likes,
+            PostUId = comment.Post,
+            UserUId = comment.CreatedBy,
+            ReplyUId = comment.ToComment,
+            WasDeleted = comment.WasDeleted
+        };
+    }
+    
     public async Task<IReadOnlyCollection<CommentResponseContract>> GetAllAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("Getting all comments");
 
-        var comments = await dbContext.Comments.Select(x => new CommentResponseContract
-        {
-            Body = x.Body,
-            CreatedAt = x.CreatedAt,
-            Likes = x.Likes,
-            PostUId = x.Post,
-            Uid = x.Uid,
-            ReplyUId = x.ToComment,
-            UserUId = x.CreatedBy,
-            WasDeleted = x.WasDeleted
-        }).ToArrayAsync(cancellationToken);
+        var comments = await dbContext.Comments.Select(x => CreateResponse(x)).ToArrayAsync(cancellationToken);
 
         logger.LogInformation("Returning all comments. Count: {Count}", comments.Length);
 
@@ -33,17 +38,7 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
     {
         logger.LogInformation("Getting all comments by  user uid");
 
-        var comments = await dbContext.Comments.Select(x => new CommentResponseContract
-            {
-                Body = x.Body,
-                CreatedAt = x.CreatedAt,
-                Likes = x.Likes,
-                PostUId = x.Post,
-                Uid = x.Uid,
-                ReplyUId = x.ToComment,
-                UserUId = x.CreatedBy,
-                WasDeleted = x.WasDeleted
-            })
+        var comments = await dbContext.Comments.Select(x => CreateResponse(x))
             .Where(x => x.UserUId == userUid)
             .ToArrayAsync(cancellationToken);
 
@@ -57,17 +52,7 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
     {
         logger.LogInformation("Getting all replied comments");
 
-        var comments = await dbContext.Comments.Select(x => new CommentResponseContract
-            {
-                Body = x.Body,
-                CreatedAt = x.CreatedAt,
-                Likes = x.Likes,
-                PostUId = x.Post,
-                Uid = x.Uid,
-                ReplyUId = x.ToComment,
-                UserUId = x.CreatedBy,
-                WasDeleted = x.WasDeleted
-            })
+        var comments = await dbContext.Comments.Select(x => CreateResponse(x))
             .Where(x => x.ReplyUId == uid)
             .ToArrayAsync(cancellationToken);
 
@@ -80,17 +65,7 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
     {
         logger.LogInformation("Getting comment by uid");
 
-        var comment = await dbContext.Comments.Select(x => new CommentResponseContract
-        {
-            Body = x.Body,
-            CreatedAt = x.CreatedAt,
-            Likes = x.Likes,
-            PostUId = x.Post,
-            Uid = x.Uid,
-            ReplyUId = x.ToComment,
-            UserUId = x.CreatedBy,
-            WasDeleted = x.WasDeleted
-        }).SingleOrDefaultAsync(x => x.Uid == uid);
+        var comment = await dbContext.Comments.Select(x => CreateResponse(x)).SingleOrDefaultAsync(x => x.Uid == uid);
 
         if (comment == null)
         {
@@ -121,17 +96,7 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
 
         logger.LogInformation("Comment created with uid {commentUId}", comment.Uid);
 
-        var response = new CommentResponseContract
-        {
-            Uid = comment.Uid,
-            Body = comment.Body,
-            CreatedAt = comment.CreatedAt,
-            Likes = comment.Likes,
-            PostUId = comment.Post,
-            UserUId = comment.CreatedBy,
-            ReplyUId = comment.ToComment,
-            WasDeleted = comment.WasDeleted
-        };
+        var response = CreateResponse(comment);
 
         logger.LogInformation("Comment created with uid {commentUId}. Response was created.", comment.Uid);
 
@@ -159,17 +124,7 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
 
         logger.LogInformation("Comment updated with uid {commentUId}", comment.Uid);
 
-        var response = new CommentResponseContract
-        {
-            Uid = comment.Uid,
-            Body = comment.Body,
-            CreatedAt = comment.CreatedAt,
-            Likes = comment.Likes,
-            PostUId = comment.Post,
-            UserUId = comment.CreatedBy,
-            ReplyUId = comment.ToComment,
-            WasDeleted = comment.WasDeleted
-        };
+        var response = CreateResponse(comment);
 
         logger.LogInformation("Comment updated with uid {commentUId}. Response was created", comment.Uid);
 

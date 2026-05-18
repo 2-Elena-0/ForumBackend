@@ -10,21 +10,26 @@ namespace ForumBackend.Services.User;
 
 public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) : IUserService
 {
+    private UserResponseContract CreateResponse(Ef.Entities.User user)
+    {
+        return new UserResponseContract
+        {
+            Uid = user.Uid,
+            Name = user.Name,
+            Email = user.Email,
+            AvatarUrl = user.AvatarImage ?? "",
+            Description = user.Description ?? "",
+            CreatedAt = user.CreatedAt,
+            FollowersCount = user.Followers,
+            Role = user.Role,
+            RoleGet = user.RoleGet
+        };
+    }
+    
     public async Task<IReadOnlyCollection<UserResponseContract>> GetAllAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("Starting getting all users");
-        var users = await dbContext.Users.Select(x => new UserResponseContract
-            {
-                Uid = x.Uid,
-                Name = x.Name,
-                Email = x.Email,
-                Description = x.Description ?? "",
-                AvatarUrl = x.AvatarImage ?? "",
-                CreatedAt = x.CreatedAt,
-                FollowersCount = x.Followers,
-                Role = x.Role,
-                RoleGet = x.RoleGet
-            })
+        var users = await dbContext.Users.Select(x => CreateResponse(x))
             .ToArrayAsync(cancellationToken);
 
         logger.LogInformation("Finished getting all users. Users count: {Count}.", users.Length);
@@ -35,18 +40,7 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
     public async Task<UserResponseContract?> GetByUidAsync(Guid uid, CancellationToken cancellationToken)
     {
         logger.LogInformation("Starting getting user by uid: {Uid}", uid);
-        var user = await dbContext.Users.Select(x => new UserResponseContract
-            {
-                Uid = x.Uid,
-                Name = x.Name,
-                Email = x.Email,
-                Description = x.Description ?? "",
-                AvatarUrl = x.AvatarImage ?? "",
-                CreatedAt = x.CreatedAt,
-                FollowersCount = x.Followers,
-                Role = x.Role,
-                RoleGet = x.RoleGet
-            })
+        var user = await dbContext.Users.Select(x => CreateResponse(x))
             .Where(x => x.Uid == uid)
             .SingleOrDefaultAsync(cancellationToken);
 
@@ -83,18 +77,7 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
         logger.LogInformation("Finished adding user with username: {Username}. User Id: {Id}, User UId: {Uid}",
             user.Name, user.Id, user.Uid);
 
-        var response = new UserResponseContract
-        {
-            Uid = user.Uid,
-            Name = user.Name,
-            Email = user.Email,
-            AvatarUrl = user.AvatarImage ?? "",
-            Description = user.Description ?? "",
-            CreatedAt = user.CreatedAt,
-            FollowersCount = user.Followers,
-            Role = user.Role,
-            RoleGet = user.RoleGet
-        };
+        var response = CreateResponse(user);
 
         logger.LogInformation("Finished adding user with username: {Username}. Request is added.", user.Name);
 
@@ -125,18 +108,7 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
 
         logger.LogInformation("Finished updating user with uid: {Uid}", uid);
 
-        var response = new UserResponseContract
-        {
-            Uid = user.Uid,
-            Name = user.Name,
-            Email = user.Email,
-            AvatarUrl = user.AvatarImage,
-            Description = user.Description,
-            CreatedAt = user.CreatedAt,
-            FollowersCount = user.Followers,
-            Role = user.Role,
-            RoleGet = user.RoleGet
-        };
+        var response = CreateResponse(user);
 
         logger.LogInformation("Finished updating user with uid: {Uid}. Response was added", uid);
 
@@ -170,18 +142,7 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
 
         logger.LogInformation("Ending add like post to user");
 
-        var response = new UserResponseContract
-        {
-            Uid = user.Uid,
-            Name = user.Name,
-            Email = user.Email,
-            AvatarUrl = user.AvatarImage ?? "",
-            Description = user.Description ?? "",
-            CreatedAt = user.CreatedAt,
-            FollowersCount = user.Followers,
-            Role = user.Role,
-            RoleGet = user.RoleGet
-        };
+        var response = CreateResponse(user);
 
         logger.LogInformation("Finished add like post to user");
 
@@ -215,18 +176,7 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
 
         logger.LogInformation("Ending add favorite post to user");
 
-        var response = new UserResponseContract
-        {
-            Uid = user.Uid,
-            Name = user.Name,
-            Email = user.Email,
-            AvatarUrl = user.AvatarImage ?? "",
-            Description = user.Description ?? "",
-            CreatedAt = user.CreatedAt,
-            FollowersCount = user.Followers,
-            Role = user.Role,
-            RoleGet = user.RoleGet
-        };
+        var response = CreateResponse(user);
 
         logger.LogInformation("Finished add favorite post to user");
 
@@ -261,18 +211,7 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
         
         logger.LogInformation("Ending add follow user to user");
         
-        var response = new UserResponseContract
-        {
-            Uid = user.Uid,
-            Name = user.Name,
-            Email = user.Email,
-            AvatarUrl = user.AvatarImage ?? "",
-            Description = user.Description ?? "",
-            CreatedAt = user.CreatedAt,
-            FollowersCount = user.Followers,
-            Role = user.Role,
-            RoleGet = user.RoleGet
-        };
+        var response = CreateResponse(user);
         
         logger.LogInformation("Finished add follow user to user");
         
@@ -304,18 +243,7 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
         
         logger.LogInformation("Ending add Interesting topic to user");
         
-        var response = new UserResponseContract
-        {
-            Uid = user.Uid,
-            Name = user.Name,
-            Email = user.Email,
-            AvatarUrl = user.AvatarImage ?? "",
-            Description = user.Description ?? "",
-            CreatedAt = user.CreatedAt,
-            FollowersCount = user.Followers,
-            Role = user.Role,
-            RoleGet = user.RoleGet
-        };
+        var response = CreateResponse(user);
         
         logger.LogInformation("Finished add Interesting topic to user");
         

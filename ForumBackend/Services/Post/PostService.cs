@@ -8,21 +8,26 @@ namespace ForumBackend.Services.Post;
 
 public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) : IPostService
 {
+    private PostResponseContract CreateResponse(Ef.Entities.Post post)
+    {
+        return new PostResponseContract
+        {
+            Uid = post.Uid,
+            UserUId = post.CreatedBy,
+            Name = post.Name,
+            Body = post.Body,
+            CreatedAt = post.CreatedAt,
+            Favorites = post.Favorites,
+            Likes = post.Likes,
+            UserDeleted = post.UserDeleted
+        };
+    }
+    
     public async Task<IReadOnlyCollection<PostResponseContract>> GetAllAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("Start Getting all posts");
 
-        var posts = await dbContext.Posts.Select(x => new PostResponseContract
-        {
-            Uid = x.Uid,
-            UserUId = x.CreatedBy,
-            Name = x.Name,
-            Body = x.Body,
-            CreatedAt = x.CreatedAt,
-            Favorites = x.Favorites,
-            Likes = x.Likes,
-            UserDeleted = x.UserDeleted,
-        }).ToArrayAsync(cancellationToken);
+        var posts = await dbContext.Posts.Select(x => CreateResponse(x)).ToArrayAsync(cancellationToken);
 
         logger.LogInformation("Finished getting all users. Posts count: {Count}", posts.Length);
 
@@ -34,17 +39,7 @@ public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) 
     {
         logger.LogInformation("Start Getting all posts by user uid: {UserId}", userUid);
 
-        var posts = await dbContext.Posts.Select(x => new PostResponseContract
-            {
-                Uid = x.Uid,
-                UserUId = x.CreatedBy,
-                Name = x.Name,
-                Body = x.Body,
-                CreatedAt = x.CreatedAt,
-                Favorites = x.Favorites,
-                Likes = x.Likes,
-                UserDeleted = x.UserDeleted
-            })
+        var posts = await dbContext.Posts.Select(x => CreateResponse(x))
             .Where(x => x.UserUId == userUid)
             .ToArrayAsync(cancellationToken);
 
@@ -57,17 +52,7 @@ public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) 
     {
         logger.LogInformation("Start Getting post by uid: {Uid}", uid);
 
-        var post = await dbContext.Posts.Select(x => new PostResponseContract
-            {
-                Uid = x.Uid,
-                UserUId = x.CreatedBy,
-                Name = x.Name,
-                Body = x.Body,
-                CreatedAt = x.CreatedAt,
-                Favorites = x.Favorites,
-                Likes = x.Likes,
-                UserDeleted = x.UserDeleted
-            })
+        var post = await dbContext.Posts.Select(x => CreateResponse(x))
             .Where(x => x.Uid == uid)
             .SingleOrDefaultAsync(cancellationToken);
 
@@ -98,17 +83,7 @@ public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) 
 
         logger.LogInformation("Finished Creating post: {Post}", post.Uid);
 
-        var response = new PostResponseContract
-        {
-            Uid = post.Uid,
-            UserUId = post.CreatedBy,
-            Name = post.Name,
-            Body = post.Body,
-            CreatedAt = post.CreatedAt,
-            Favorites = post.Favorites,
-            Likes = post.Likes,
-            UserDeleted = post.UserDeleted
-        };
+        var response = CreateResponse(post);
 
         logger.LogInformation("Finished Creating post: {Post}. Response created.", response.Uid);
 
@@ -137,17 +112,7 @@ public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) 
 
         logger.LogInformation("Finished Updating post: {Post}", post.Uid);
 
-        var response = new PostResponseContract
-        {
-            Uid = post.Uid,
-            UserUId = post.CreatedBy,
-            Name = post.Name,
-            Body = post.Body,
-            CreatedAt = post.CreatedAt,
-            Favorites = post.Favorites,
-            Likes = post.Likes,
-            UserDeleted = post.UserDeleted
-        };
+        var response = CreateResponse(post);
 
         logger.LogInformation("Finished Updating post: {Post}. Response created.", response.Uid);
 
@@ -178,17 +143,7 @@ public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) 
         
         logger.LogInformation("Finished add topic: {Topic}. Response created.", topicUid);
         
-        var response = new PostResponseContract
-        {
-            Uid = post.Uid,
-            UserUId = post.CreatedBy,
-            Name = post.Name,
-            Body = post.Body,
-            CreatedAt = post.CreatedAt,
-            Favorites = post.Favorites,
-            Likes = post.Likes,
-            UserDeleted = post.UserDeleted
-        };
+        var response = CreateResponse(post);
         
         logger.LogInformation("Finished add topic: {Topic}. Response created.", response.Uid);
         
