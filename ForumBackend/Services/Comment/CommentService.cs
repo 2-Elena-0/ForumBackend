@@ -7,7 +7,7 @@ namespace ForumBackend.Services.Comment;
 
 public class CommentService(ForumDbContext dbContext, ILogger<CommentService> logger) : ICommentService
 {
-    private CommentResponseContract CreateResponse(Ef.Entities.Comment comment)
+    private static CommentResponseContract CreateResponse(Ef.Entities.Comment comment)
     {
         return new CommentResponseContract
         {
@@ -65,7 +65,7 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
     {
         logger.LogInformation("Getting comment by uid");
 
-        var comment = await dbContext.Comments.Select(x => CreateResponse(x)).SingleOrDefaultAsync(x => x.Uid == uid);
+        var comment = await dbContext.Comments.Select(x => CreateResponse(x)).SingleOrDefaultAsync(x => x.Uid == uid, cancellationToken);
 
         if (comment == null)
         {
@@ -108,7 +108,7 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
     {
         logger.LogInformation("Start updating comment by user {userUid}", uid);
 
-        var comment = await dbContext.Comments.SingleOrDefaultAsync(x => x.Uid == uid);
+        var comment = await dbContext.Comments.SingleOrDefaultAsync(x => x.Uid == uid, cancellationToken);
 
         if (comment == null)
         {

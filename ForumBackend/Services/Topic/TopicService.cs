@@ -80,7 +80,7 @@ public class TopicService(ForumDbContext dbContext, ILogger<TopicService> logger
     {
         logger.LogInformation("Start updating topic with uid: {Uid}", uid);
 
-        var topic = await dbContext.Topics.SingleOrDefaultAsync(x => x.Uid == uid);
+        var topic = await dbContext.Topics.SingleOrDefaultAsync(x => x.Uid == uid, cancellationToken);
 
         if (topic == null)
         {

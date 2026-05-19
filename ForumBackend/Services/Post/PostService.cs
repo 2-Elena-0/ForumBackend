@@ -8,7 +8,7 @@ namespace ForumBackend.Services.Post;
 
 public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) : IPostService
 {
-    private PostResponseContract CreateResponse(Ef.Entities.Post post)
+    private static PostResponseContract CreateResponse(Ef.Entities.Post post)
     {
         return new PostResponseContract
         {
@@ -78,7 +78,7 @@ public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) 
             Body = request.Body,
         };
 
-        await dbContext.Posts.AddAsync(post);
+        await dbContext.Posts.AddAsync(post, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("Finished Creating post: {Post}", post.Uid);
@@ -119,8 +119,8 @@ public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) 
         return response;
     }
 
-    public async Task<PostResponseContract?> AddTopicToPostAsync(Guid postUid, Guid topicUid, UpdatePostRequestContract request,
-        CancellationToken cancellationToken)
+    public async Task<PostResponseContract?> AddTopicToPostAsync(
+        Guid postUid, Guid topicUid, CancellationToken cancellationToken)
     {
         logger.LogInformation("Starting add topic {topicUid} to post {postUid}", topicUid, postUid);
         

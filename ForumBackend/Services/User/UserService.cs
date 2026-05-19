@@ -10,7 +10,7 @@ namespace ForumBackend.Services.User;
 
 public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) : IUserService
 {
-    private UserResponseContract CreateResponse(Ef.Entities.User user)
+    private static UserResponseContract CreateResponse(Ef.Entities.User user)
     {
         return new UserResponseContract
         {
@@ -71,7 +71,7 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
             Role = request.Role,
         };
 
-        await dbContext.Users.AddAsync(user);
+        await dbContext.Users.AddAsync(user, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("Finished adding user with username: {Username}. User Id: {Id}, User UId: {Uid}",
@@ -115,9 +115,8 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
         return response;
     }
 
-    public async Task<UserResponseContract?> AddLikePostAsync(Guid userUid, Guid postUid,
-        UpdateUserRequestContract request,
-        CancellationToken cancellationToken)
+    public async Task<UserResponseContract?> AddLikePostAsync(
+        Guid userUid, Guid postUid, CancellationToken cancellationToken)
     {
         logger.LogInformation("Starting add like post with uid {postUid} to user {userUid}", postUid, userUid);
 
@@ -149,9 +148,8 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
         return response;
     }
 
-    public async Task<UserResponseContract?> AddFavoritePostAsync(Guid userUid, Guid postUid,
-        UpdateUserRequestContract request,
-        CancellationToken cancellationToken)
+    public async Task<UserResponseContract?> AddFavoritePostAsync(Guid userUid, 
+        Guid postUid, CancellationToken cancellationToken)
     {
         logger.LogInformation("Starting add favorite post with uid {postUid} to user {userUid}", postUid, userUid);
 
@@ -183,9 +181,8 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
         return response;
     }
 
-    public async Task<UserResponseContract?> AddFollowAsync(Guid userFollowerUid, Guid followUid,
-        UpdateUserRequestContract request,
-        CancellationToken cancellationToken)
+    public async Task<UserResponseContract?> AddFollowAsync(
+        Guid userFollowerUid, Guid followUid, CancellationToken cancellationToken)
     {
         logger.LogInformation("Starting add follow user with uid {followUid} to user {userFollowerUid}", followUid,
             userFollowerUid);
@@ -218,9 +215,8 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
         return response;
     }
 
-    public async Task<UserResponseContract?> InterestingTopic(Guid userUid, Guid topicUid,
-        UpdateUserRequestContract request,
-        CancellationToken cancellationToken)
+    public async Task<UserResponseContract?> AddInterestingTopic(
+        Guid userUid, Guid topicUid, CancellationToken cancellationToken)
     {
         logger.LogInformation("Starting add Interesting topic with uid: {topicUid} to user {userUid}",  topicUid, userUid);
         

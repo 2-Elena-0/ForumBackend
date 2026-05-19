@@ -12,13 +12,13 @@ public interface IUserService
 
     Task<UserResponseContract?> UpdateAsync(Guid uid, UpdateUserRequestContract request, CancellationToken cancellationToken);
     
-    Task<UserResponseContract?> AddLikePostAsync(Guid userUid, Guid postUid, UpdateUserRequestContract request, CancellationToken cancellationToken);
+    Task<UserResponseContract?> AddLikePostAsync(Guid userUid, Guid postUid, CancellationToken cancellationToken);
     
-    Task<UserResponseContract?> AddFavoritePostAsync(Guid userUid, Guid postUid, UpdateUserRequestContract request, CancellationToken cancellationToken);
+    Task<UserResponseContract?> AddFavoritePostAsync(Guid userUid, Guid postUid, CancellationToken cancellationToken);
     
-    Task<UserResponseContract?> AddFollowAsync(Guid userFollowerUid, Guid followUid, UpdateUserRequestContract request, CancellationToken cancellationToken);
+    Task<UserResponseContract?> AddFollowAsync(Guid userFollowerUid, Guid followUid, CancellationToken cancellationToken);
     
-    Task<UserResponseContract?> InterestingTopic(Guid userUid, Guid topicUid, UpdateUserRequestContract request, CancellationToken cancellationToken);
+    Task<UserResponseContract?> AddInterestingTopic(Guid userUid, Guid topicUid, CancellationToken cancellationToken);
 
     
     Task<bool> DeleteAsync(Guid uid, CancellationToken cancellationToken);
