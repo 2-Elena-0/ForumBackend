@@ -286,4 +286,34 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
         logger.LogInformation("Deleting was ended");
         return true;
     }
+
+    public async Task<bool> CheckName(string name, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Starting check name. Name: {name}", name);
+        
+        var user = dbContext.Users.SingleOrDefault(x => x.Name == name);
+        
+        if (user == null)
+        {
+            logger.LogInformation("User not found: {Name}", name);
+            return false;
+        }
+        
+        return true;
+    }
+
+    public async Task<bool> CheckEmail(string email, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Starting check email. Email: {email}", email);
+        
+        var user = dbContext.Users.SingleOrDefault(x => x.Email == email);
+        
+        if (user == null)
+        {
+            logger.LogInformation("User not found: {email}", email);
+            return false;
+        }
+        
+        return true;
+    }
 }

@@ -22,4 +22,8 @@ public interface IUserService
 
     
     Task<bool> DeleteAsync(Guid uid, CancellationToken cancellationToken);
+    
+    Task<bool> CheckName(string name, CancellationToken cancellationToken);
+    
+    Task<bool> CheckEmail(string email, CancellationToken cancellationToken);
 }

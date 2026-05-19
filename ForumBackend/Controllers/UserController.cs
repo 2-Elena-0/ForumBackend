@@ -1,5 +1,6 @@
 using ForumBackend.Contracts.User;
 using ForumBackend.Filters.Post;
+using ForumBackend.Filters.Topic;
 using ForumBackend.Filters.User;
 using ForumBackend.Services.User;
 using Microsoft.AspNetCore.Mvc;
@@ -118,7 +119,6 @@ public class UserController(IUserService userService, ILogger<UserController> lo
     }
     
     [UserExceptionFilter]
-    [PostExceptionFilter]
     [HttpPut("{uid:guid}/follow/{userUid:guid}")]
     public async Task<ActionResult<UserResponseContract>> Follow(
         [FromRoute] Guid uid, [FromRoute] Guid userUid, CancellationToken cancellationToken)
@@ -137,13 +137,13 @@ public class UserController(IUserService userService, ILogger<UserController> lo
     }
     
     [UserExceptionFilter]
-    [PostExceptionFilter]
+    [TopicExceptionFilter]
     [HttpPut("{uid:guid}/topic/{topicUid:guid}")]
     public async Task<ActionResult<UserResponseContract>> AddTopic(
         [FromRoute] Guid uid, [FromRoute] Guid topicUid, CancellationToken cancellationToken)
     {
         logger.LogInformation("User with uid {uid} adding interesting topic {topicUid}.", uid, topicUid);
-        var updatedUser = await userService.AddFollowAsync(uid, topicUid, cancellationToken);
+        var updatedUser = await userService.AddInterestingTopic(uid, topicUid, cancellationToken);
 
         if (updatedUser is null)
         {
@@ -173,5 +173,27 @@ public class UserController(IUserService userService, ILogger<UserController> lo
         logger.LogInformation("User with uid: {UserUid} deleted.", uid);
 
         return NoContent();
+    }
+    
+    [HttpGet("checkEmail/{email}")]
+    public async Task<IActionResult> CheckEmail([FromRoute] string email, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Checking availability user with email: {email}", email);
+
+        var userCheck = await userService.CheckEmail(email, cancellationToken);
+
+        logger.LogInformation("User was found: {}", userCheck);
+        return Ok(userCheck);
+    }
+    
+    [HttpGet("checkName/{name}")]
+    public async Task<IActionResult> CheckName([FromRoute] string name, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Checking availability user with name: {name}", name);
+
+        var userCheck = await userService.CheckName(name, cancellationToken);
+
+        logger.LogInformation("User was found: {}", userCheck);
+        return Ok(userCheck);
     }
 }
