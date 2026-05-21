@@ -13,4 +13,7 @@ public class CreatePostRequestContract
     
     [Required]
     public required string Body { get; init; }
+    
+    [Required]
+    public required ICollection<string> Images { get; init; }
 }

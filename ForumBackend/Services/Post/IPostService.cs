@@ -8,11 +8,11 @@ public interface IPostService
     
     Task<IReadOnlyCollection<PostResponseContract>> GetAllByUserUidAsync(Guid userUid, CancellationToken cancellationToken);
 
-    Task<PostResponseContract?> GetByUidAsync(Guid uid, CancellationToken cancellationToken);
+    Task<PostResponseWithImagesContract?> GetByUidAsync(Guid uid, CancellationToken cancellationToken);
 
-    Task<PostResponseContract> CreateAsync(CreatePostRequestContract request, CancellationToken cancellationToken);
+    Task<PostResponseWithImagesContract> CreateAsync(CreatePostRequestContract request, CancellationToken cancellationToken);
 
-    Task<PostResponseContract?> UpdateAsync(Guid uid, UpdatePostRequestContract request, CancellationToken cancellationToken);
+    Task<PostResponseWithImagesContract?> UpdateAsync(Guid uid, UpdatePostRequestContract request, CancellationToken cancellationToken);
 
     Task<PostResponseContract?> AddTopicToPostAsync(Guid postUid, Guid topicUid, CancellationToken cancellationToken);
     

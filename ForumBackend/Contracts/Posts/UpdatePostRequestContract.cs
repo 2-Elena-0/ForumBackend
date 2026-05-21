@@ -12,5 +12,5 @@ public class UpdatePostRequestContract
     public required string Body { get; init; }
     
     [Required]
-    public required bool UserDeleted { get; init; }
+    public required ICollection<string> Images { get; init; }
 }

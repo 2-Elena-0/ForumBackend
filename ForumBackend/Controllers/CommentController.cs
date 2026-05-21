@@ -37,21 +37,6 @@ public class CommentController(ICommentService commentService, ILogger<CommentCo
         return Ok(comments);
     }
 
-    [HttpGet]
-    [CommentExceptionFilter]
-    [Route("api/CommentReply/{uid:guid}")]
-    public async Task<ActionResult<CommentResponseContract[]>> GetCommentReplies([FromRoute] Guid uid,
-        CancellationToken cancellationToken)
-    {
-        logger.LogInformation("Getting comment posts.");
-
-        var comments = await commentService.GetAllRepliedByUidAsync(uid, cancellationToken);
-
-        logger.LogInformation("comments received {Count} comments.", comments.Count);
-
-        return Ok(comments);
-    }
-
     [CommentExceptionFilter]
     [HttpGet("{uid:guid}")]
     public async Task<ActionResult<CommentResponseContract>> GetByUid([FromRoute] Guid uid,

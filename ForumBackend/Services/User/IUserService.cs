@@ -7,6 +7,8 @@ public interface IUserService
     Task<IReadOnlyCollection<UserResponseContract>> GetAllAsync(CancellationToken cancellationToken);
 
     Task<UserResponseContract?> GetByUidAsync(Guid uid, CancellationToken cancellationToken);
+    
+    Task<UserLoginResponseContract?> LoginByEmailAsync(UserLoginContract request, CancellationToken cancellationToken);
 
     Task<UserResponseContract> CreateAsync(CreateUserRequestContract request, CancellationToken cancellationToken);
 
@@ -26,4 +28,6 @@ public interface IUserService
     Task<bool> CheckName(string name, CancellationToken cancellationToken);
     
     Task<bool> CheckEmail(string email, CancellationToken cancellationToken);
+    
+    Task<string?> GetAvatarByUidAsync(Guid uid, CancellationToken cancellationToken);
 }

@@ -1,4 +1,5 @@
 using ForumBackend.Contracts.Posts;
+using ForumBackend.Ef.Entities;
 using ForumBackend.Filters.Post;
 using ForumBackend.Filters.Topic;
 using ForumBackend.Services.Post;
@@ -10,6 +11,23 @@ namespace ForumBackend.Controllers;
 [Route("api/[controller]")]
 public class PostController(IPostService postService, ILogger<PostController> logger) : ControllerBase
 {
+    // [NonAction]
+    // private static PostResponseWithImagesContract CreatePostResponseWithAvatarContract(PostResponseContract post,
+    //     string avatar)
+    // {
+    //     return new PostResponseWithImagesContract
+    //     {
+    //         Uid = post.Uid,
+    //         Name = post.Name,
+    //         Body = post.Body,
+    //         CreatedAt = post.CreatedAt,
+    //         Favorites = post.Favorites,
+    //         Likes =  post.Likes,
+    //         UserUId = post.UserUId,
+    //         UserDeleted = post.UserDeleted,
+    //     };
+    // }
+    
     [HttpGet]
     public async Task<ActionResult<PostResponseContract[]>> GetAll(CancellationToken cancellationToken)
     {
@@ -24,7 +42,7 @@ public class PostController(IPostService postService, ILogger<PostController> lo
     
     [HttpGet]
     [PostExceptionFilter]
-    [Route("api/PostUser/{uid:guid}")]
+    [Route("{uid:guid}")]
     public async Task<ActionResult<PostResponseContract[]>> GetUserPosts([FromRoute] Guid uid, CancellationToken cancellationToken)
     {
         logger.LogInformation("Getting user posts.");
@@ -37,8 +55,8 @@ public class PostController(IPostService postService, ILogger<PostController> lo
     }
 
     [PostExceptionFilter]
-    [HttpGet("{uid:guid}")]
-    public async Task<ActionResult<PostResponseContract>> GetByUid([FromRoute] Guid uid,
+    [HttpGet("byUid/{uid:guid}")]
+    public async Task<ActionResult<PostResponseWithImagesContract>> GetByUid([FromRoute] Guid uid,
         CancellationToken cancellationToken)
     {
         logger.LogInformation("Getting post with uid: {PostUid}.", uid);

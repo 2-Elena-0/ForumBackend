@@ -10,6 +10,7 @@ namespace ForumBackend.Services.User;
 
 public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) : IUserService
 {
+    private static string avatarBase = "./avatar/avatarBase.png";
     private static UserResponseContract CreateResponse(Ef.Entities.User user)
     {
         return new UserResponseContract
@@ -17,7 +18,7 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
             Uid = user.Uid,
             Name = user.Name,
             Email = user.Email,
-            AvatarUrl = user.AvatarImage ?? "",
+            AvatarUrl = user.AvatarImage ?? avatarBase,
             Description = user.Description ?? "",
             CreatedAt = user.CreatedAt,
             FollowersCount = user.Followers,
@@ -40,7 +41,18 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
     public async Task<UserResponseContract?> GetByUidAsync(Guid uid, CancellationToken cancellationToken)
     {
         logger.LogInformation("Starting getting user by uid: {Uid}", uid);
-        var user = await dbContext.Users.Select(x => CreateResponse(x))
+        var user = await dbContext.Users.Select(x => new UserResponseContract
+            {
+                Uid = x.Uid,
+                Name = x.Name,
+                Email = x.Email,
+                AvatarUrl = x.AvatarImage ?? avatarBase,
+                Description = x.Description ?? "",
+                CreatedAt = x.CreatedAt,
+                FollowersCount = x.Followers,
+                Role = x.Role,
+                RoleGet = x.RoleGet
+            })
             .Where(x => x.Uid == uid)
             .SingleOrDefaultAsync(cancellationToken);
 
@@ -53,6 +65,40 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
         logger.LogInformation("Finished getting user by uid: {Uid}", uid);
 
         return user;
+    }
+
+    public async Task<UserLoginResponseContract?> LoginByEmailAsync(UserLoginContract request, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Starting login user with email: {Email}", request.Email);
+        
+        var user = dbContext.Users.SingleOrDefault(x => x.Email == request.Email);
+        
+        if (user == null)
+        {
+            logger.LogWarning("User with Email not found: {Email}", request.Email);
+            throw new UserNotFoundException($"User with Email {request.Email} not found");
+        }
+        
+        var hasher = new PasswordHasher<string>(); 
+        var pwd = hasher.VerifyHashedPassword(user.Email, user.HashPassword, request.Password);
+
+        var response = new UserLoginResponseContract
+        {
+            Uid = user.Uid,
+            Name = user.Name,
+            Email = user.Email,
+            AvatarUrl = user.AvatarImage ?? avatarBase,
+            Description = user.Description ?? "",
+            CreatedAt = user.CreatedAt,
+            FollowersCount = user.Followers,
+            Role = user.Role,
+            RoleGet = user.RoleGet,
+            PwdVerificationResult = pwd
+        };
+        
+        logger.LogInformation("Finished login user with email: {Email}", request.Email);
+
+        return response;
     }
 
     public async Task<UserResponseContract> CreateAsync(CreateUserRequestContract request,
@@ -68,6 +114,7 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
             Name = request.Name,
             Email = request.Email,
             HashPassword = hashPwd,
+            AvatarImage = avatarBase,
             Role = request.Role,
         };
 
@@ -315,5 +362,21 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
         }
         
         return true;
+    }
+
+    public async Task<string?> GetAvatarByUidAsync(Guid uid, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Starting searching avatar for user with uid {}", uid);
+        
+        var user = await dbContext.Users.SingleOrDefaultAsync(x => x.Uid == uid, cancellationToken);
+
+        if (user == null)
+        {
+            logger.LogWarning("User not found. uid: {}", uid);
+            throw new UserNotFoundException($"User not found. uid: {uid}");
+        }
+
+        logger.LogInformation("Find avatar: {}", user.AvatarImage);
+        return user.AvatarImage;
     }
 }

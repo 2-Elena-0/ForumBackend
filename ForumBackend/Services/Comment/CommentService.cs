@@ -17,7 +17,6 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
             Likes = comment.Likes,
             PostUId = comment.Post,
             UserUId = comment.CreatedBy,
-            ReplyUId = comment.ToComment,
             WasDeleted = comment.WasDeleted
         };
     }
@@ -43,20 +42,6 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
             .ToArrayAsync(cancellationToken);
 
         logger.LogInformation("Returning all user's comments. Count: {Count}", comments.Length);
-
-        return comments;
-    }
-
-    public async Task<IReadOnlyCollection<CommentResponseContract>> GetAllRepliedByUidAsync(Guid uid,
-        CancellationToken cancellationToken)
-    {
-        logger.LogInformation("Getting all replied comments");
-
-        var comments = await dbContext.Comments.Select(x => CreateResponse(x))
-            .Where(x => x.ReplyUId == uid)
-            .ToArrayAsync(cancellationToken);
-
-        logger.LogInformation("Returning all replied comments. Count: {Count}", comments.Length);
 
         return comments;
     }
@@ -88,7 +73,6 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
             Body = request.Body,
             CreatedBy = request.UserUId,
             Post = request.PostId,
-            ToComment = request.ReplyId
         };
 
         await dbContext.Comments.AddAsync(comment, cancellationToken);
@@ -135,8 +119,7 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
     {
         logger.LogInformation("Starting comment deleted.");
 
-        var comment = await dbContext.Comments.Include(x => x.ToCommentNavigation)
-            .SingleOrDefaultAsync(x => x.Uid == uid, cancellationToken);
+        var comment = await dbContext.Comments.SingleOrDefaultAsync(x => x.Uid == uid, cancellationToken);
 
         if (comment == null)
         {
@@ -144,7 +127,6 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
             return false;
         }
 
-        if (comment.ToCommentNavigation != null) dbContext.Comments.RemoveRange(comment.ToCommentNavigation);
         dbContext.Comments.Remove(comment);
 
         await dbContext.SaveChangesAsync(cancellationToken);

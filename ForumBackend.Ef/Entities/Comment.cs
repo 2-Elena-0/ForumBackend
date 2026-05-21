@@ -17,17 +17,11 @@ public partial class Comment
 
     public Guid Post { get; set; }
 
-    public Guid? ToComment { get; set; }
-
     public long Likes { get; set; }
 
     public bool WasDeleted { get; set; }
 
     public virtual User CreatedByNavigation { get; set; } = null!;
 
-    public virtual ICollection<Comment> InverseToCommentNavigation { get; set; } = new List<Comment>();
-
     public virtual Post PostNavigation { get; set; } = null!;
-
-    public virtual Comment? ToCommentNavigation { get; set; }
 }

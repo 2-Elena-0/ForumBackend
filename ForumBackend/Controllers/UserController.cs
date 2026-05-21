@@ -1,16 +1,48 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using ForumBackend.Contracts.User;
 using ForumBackend.Filters.Post;
 using ForumBackend.Filters.Topic;
 using ForumBackend.Filters.User;
 using ForumBackend.Services.User;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 namespace ForumBackend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class UserController(IUserService userService, ILogger<UserController> logger) : ControllerBase
+public class UserController(IUserService userService, ILogger<UserController> logger, IConfiguration _configuration) : ControllerBase
 {
+    [NonAction] 
+    public string TokenGenerate(string uid, string email) 
+    { 
+        Console.WriteLine($"Cofiguration: {_configuration["Jwt:Key"]}"); 
+        var claims = new[] 
+        { 
+            new Claim(ClaimTypes.NameIdentifier, uid), 
+            new Claim(ClaimTypes.Email, email), 
+        }; 
+        var key = new SymmetricSecurityKey( 
+            Encoding.UTF8.GetBytes(_configuration["Jwt:Key"])); 
+ 
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256); 
+ 
+        var token = new JwtSecurityToken( 
+            issuer: _configuration["Jwt:Issuer"], 
+            audience: _configuration["Jwt:Audience"], 
+            claims: claims, 
+            expires: DateTime.Now.AddMinutes(60), 
+            signingCredentials: creds); 
+ 
+        var resToken = new JwtSecurityTokenHandler().WriteToken(token); 
+        return resToken; 
+    } 
+    
+    //[Authorize]
     [HttpGet]
     public async Task<ActionResult<UserResponseContract[]>> GetAll(CancellationToken cancellationToken)
     {
@@ -23,6 +55,7 @@ public class UserController(IUserService userService, ILogger<UserController> lo
         return Ok(users);
     }
 
+    //[Authorize]
     [UserExceptionFilter]
     [HttpGet("{uid:guid}")]
     public async Task<ActionResult<UserResponseContract>> GetByUid([FromRoute] Guid uid,
@@ -42,6 +75,51 @@ public class UserController(IUserService userService, ILogger<UserController> lo
 
         return Ok(user);
     }
+    
+    [UserExceptionFilter]
+    [HttpPost("login")]
+    public async Task<ActionResult> GetByUid([FromBody] UserLoginContract request, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Trying login user with email: {User}.", request.Email);
+
+        var user = await userService.LoginByEmailAsync(request, cancellationToken);
+
+        if (user is null)
+        {
+            logger.LogWarning("User with uid {Email} was not found.", request.Email);
+            return NotFound();
+        }
+
+        if (user.PwdVerificationResult == PasswordVerificationResult.Failed)
+        {
+            logger.LogInformation("User with uid {User} failed verification. Incorrect email or password", user.Uid);
+            return Unauthorized();
+        }
+
+        var token = TokenGenerate(user.Uid.ToString(), user.Email);
+        
+        logger.LogInformation("User with email {} success verification", user.Email);
+
+        return Ok(new {token = token, uid = user.Uid.ToString()});
+    }
+    
+    [HttpPost("register")]
+    public async Task<ActionResult> Register(
+        [FromBody] CreateUserRequestContract request,
+        CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Creating user with username {Username}.", request.Name);
+
+        var createdUser = await userService.CreateAsync(request, cancellationToken);
+
+        var token = TokenGenerate(createdUser.Uid.ToString(), createdUser.Email);
+        
+        logger.LogInformation("Created user with username: {Username}. User UId: {UId}", createdUser.Name,
+            createdUser.Uid);
+
+        return CreatedAtAction(nameof(GetByUid), new { uid = createdUser.Uid }, new { token = token, uid = createdUser.Uid.ToString()});
+    }
+
 
     [HttpPost]
     public async Task<ActionResult<UserResponseContract>> Create(

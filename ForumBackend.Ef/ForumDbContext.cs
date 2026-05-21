@@ -20,6 +20,8 @@ public partial class ForumDbContext : DbContext
 
     public virtual DbSet<Post> Posts { get; set; }
 
+    public virtual DbSet<PostsImage> PostsImages { get; set; }
+
     public virtual DbSet<Role> Roles { get; set; }
 
     public virtual DbSet<Topic> Topics { get; set; }
@@ -51,7 +53,6 @@ public partial class ForumDbContext : DbContext
             entity.Property(e => e.CreatedBy).HasColumnName("created_by");
             entity.Property(e => e.Likes).HasColumnName("likes");
             entity.Property(e => e.Post).HasColumnName("post");
-            entity.Property(e => e.ToComment).HasColumnName("to_comment");
             entity.Property(e => e.Uid)
                 .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("uid");
@@ -68,11 +69,6 @@ public partial class ForumDbContext : DbContext
                 .HasForeignKey(d => d.Post)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("comments_posts_fk");
-
-            entity.HasOne(d => d.ToCommentNavigation).WithMany(p => p.InverseToCommentNavigation)
-                .HasPrincipalKey(p => p.Uid)
-                .HasForeignKey(d => d.ToComment)
-                .HasConstraintName("comments_comments_fk");
         });
 
         modelBuilder.Entity<Post>(entity =>
@@ -128,6 +124,24 @@ public partial class ForumDbContext : DbContext
                         j.IndexerProperty<Guid>("Post").HasColumnName("post");
                         j.IndexerProperty<Guid>("Topic").HasColumnName("topic");
                     });
+        });
+
+        modelBuilder.Entity<PostsImage>(entity =>
+        {
+            entity.HasKey(e => new { e.Post, e.Image }).HasName("posts_images_pk");
+
+            entity.ToTable("posts_images", "Forum");
+
+            entity.Property(e => e.Post).HasColumnName("post");
+            entity.Property(e => e.Image)
+                .HasColumnType("character varying")
+                .HasColumnName("image");
+
+            entity.HasOne(d => d.PostNavigation).WithMany(p => p.PostsImages)
+                .HasPrincipalKey(p => p.Uid)
+                .HasForeignKey(d => d.Post)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("posts_images_posts_fk");
         });
 
         modelBuilder.Entity<Role>(entity =>
