@@ -15,11 +15,5 @@ public class UpdateUserRequestContract
     [Required]
     [StringLength(255, MinimumLength = 3, ErrorMessage = "Avatar url must be between 3 and 255 characters.")]
     public required string AvatarUrl { get; init; }
-
-    [Required]
-    [StringLength(255, MinimumLength = 3, ErrorMessage = "Avatar url must be between 3 and 255 characters.")]
-    public string Role { get; init; } = "standard";
-    
-    public required DateOnly RoleDate { get; init; }
     
 }

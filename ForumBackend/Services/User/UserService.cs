@@ -1,3 +1,4 @@
+using ForumBackend.Contracts.Posts;
 using ForumBackend.Contracts.User;
 using ForumBackend.Ef;
 using ForumBackend.Exceptions.Topic;
@@ -147,8 +148,6 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
         user.Name = request.Name;
         user.AvatarImage = request.AvatarUrl;
         user.Description = request.Description;
-        user.Role = request.Role;
-        user.RoleGet = request.RoleDate;
 
         dbContext.Users.Update(user);
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -167,7 +166,7 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
     {
         logger.LogInformation("Starting add like post with uid {postUid} to user {userUid}", postUid, userUid);
 
-        var user = dbContext.Users.SingleOrDefault(x => x.Uid == userUid);
+        var user = dbContext.Users.Include(x => x.PostLikes).SingleOrDefault(x => x.Uid == userUid);
 
         if (user == null)
         {
@@ -183,9 +182,14 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
             throw new PostNotFoundException($"Post with uid {postUid} not found");
         }
 
-        user.PostLikes.Add(post);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        if (!user.PostLikes.Contains(post))
+        {
+            user.PostLikes.Add(post);
+            post.Likes += 1;
+            await dbContext.SaveChangesAsync(cancellationToken);
 
+        }
+        
         logger.LogInformation("Ending add like post to user");
 
         var response = CreateResponse(user);
@@ -200,7 +204,7 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
     {
         logger.LogInformation("Starting add favorite post with uid {postUid} to user {userUid}", postUid, userUid);
 
-        var user = dbContext.Users.SingleOrDefault(x => x.Uid == userUid);
+        var user = dbContext.Users.Include(x => x.PostFavorites).SingleOrDefault(x => x.Uid == userUid);
 
         if (user == null)
         {
@@ -216,9 +220,86 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
             throw new PostNotFoundException($"Post with uid {postUid} not found");
         }
 
-        user.PostFavorites.Add(post);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        if (!user.PostFavorites.Contains(post))
+        {
+            user.PostFavorites.Add(post);
+            post.Favorites += 1;
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
 
+        logger.LogInformation("Ending remove favorite post to user");
+
+        var response = CreateResponse(user);
+
+        logger.LogInformation("Finished remove favorite post to user");
+
+        return response;
+    }
+
+    public async Task<UserResponseContract?> RemoveLikePostAsync(Guid userUid, Guid postUid, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Starting remove like post with uid {postUid} to user {userUid}", postUid, userUid);
+
+        var user = dbContext.Users.Include(x => x.PostLikes).SingleOrDefault(x => x.Uid == userUid);
+
+        if (user == null)
+        {
+            logger.LogWarning("User not found: {Uid}", userUid);
+            throw new UserNotFoundException($"User with uid {userUid} not found");
+        }
+
+        var post = dbContext.Posts.SingleOrDefault(x => x.Uid == postUid);
+
+        if (post == null)
+        {
+            logger.LogWarning("Post not found: {PostUid}", postUid);
+            throw new PostNotFoundException($"Post with uid {postUid} not found");
+        }
+
+        if (user.PostLikes.Contains(post))
+        {
+            user.PostLikes.Remove(post);
+            post.Likes -= 1;
+            
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        
+        logger.LogInformation("Ending remove like post to user");
+
+        var response = CreateResponse(user);
+
+        logger.LogInformation("Finished remove like post to user");
+
+        return response;
+    }
+
+    public async Task<UserResponseContract?> RemoveFavoritePostAsync(Guid userUid, Guid postUid, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Starting remove favorite post with uid {postUid} to user {userUid}", postUid, userUid);
+
+        var user = dbContext.Users.Include(x => x.PostFavorites).SingleOrDefault(x => x.Uid == userUid);
+
+        if (user == null)
+        {
+            logger.LogWarning("User not found: {Uid}", userUid);
+            throw new UserNotFoundException($"User with uid {userUid} not found");
+        }
+
+        var post = dbContext.Posts.SingleOrDefault(x => x.Uid == postUid);
+
+        if (post == null)
+        {
+            logger.LogWarning("Post not found: {PostUid}", postUid);
+            throw new PostNotFoundException($"Post with uid {postUid} not found");
+        }
+
+        if (user.PostFavorites.Contains(post))
+        {
+            user.PostFavorites.Remove(post);
+            post.Favorites -= 1;
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        
         logger.LogInformation("Ending add favorite post to user");
 
         var response = CreateResponse(user);
@@ -378,5 +459,109 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
 
         logger.LogInformation("Find avatar: {}", user.AvatarImage);
         return user.AvatarImage;
+    }
+
+    public async Task<IReadOnlyCollection<string>> GetLikePostUids(Guid uid, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Starting get like post of user {}", uid);
+
+        var user = await dbContext.Users.Include(x => x.PostLikes).SingleOrDefaultAsync(x => x.Uid == uid);
+
+        if (user == null)
+        {
+            logger.LogWarning("User with uid {} not found", uid);
+            throw new UserNotFoundException("User not found");
+        }
+
+        List<string> postUids = new List<string>();
+        foreach (var post in user.PostLikes)
+        {
+            postUids.Add(post.Uid.ToString());
+        }
+        
+        return postUids;
+    }
+
+    public async Task<IReadOnlyCollection<string>> GetFavoritePostUids(Guid uid, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Starting get like post of user {}", uid);
+
+        var user = await dbContext.Users.Include(x => x.PostFavorites).SingleOrDefaultAsync(x => x.Uid == uid);
+
+        if (user == null)
+        {
+            logger.LogWarning("User with uid {} not found", uid);
+            throw new UserNotFoundException("User not found");
+        }
+
+        List<string> postUids = new List<string>();
+        foreach (var post in user.PostFavorites)
+        {
+            postUids.Add(post.Uid.ToString());
+        }
+        
+        return postUids;
+    }
+
+    public async Task<IReadOnlyCollection<PostResponseContract>> GetLikePostFullUids(Guid uid, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Starting get like post of user {}", uid);
+
+        var user = await dbContext.Users.Include(x => x.PostLikes).SingleOrDefaultAsync(x => x.Uid == uid);
+
+        if (user == null)
+        {
+            logger.LogWarning("User with uid {} not found", uid);
+            throw new UserNotFoundException("User not found");
+        }
+
+        List<PostResponseContract> postUids = new List<PostResponseContract>();
+        foreach (var post in user.PostLikes)
+        {
+            postUids.Add(new PostResponseContract
+            {
+                Uid = post.Uid,
+                UserUId = post.CreatedBy, 
+                Name = post.Name,
+                Body = post.Body,
+                CreatedAt = post.CreatedAt,
+                Favorites = post.Favorites,
+                Likes = post.Likes,
+                UserDeleted =  post.UserDeleted,
+            });
+        }
+        
+        return postUids;
+    }
+
+    public async Task<IReadOnlyCollection<PostResponseContract>> GetFavoritePostFullUids(Guid uid, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Starting get like post of user {}", uid);
+
+        var user = await dbContext.Users.Include(x => x.PostFavorites).SingleOrDefaultAsync(x => x.Uid == uid);
+
+        if (user == null)
+        {
+            logger.LogWarning("User with uid {} not found", uid);
+            throw new UserNotFoundException("User not found");
+        }
+
+        List<PostResponseContract> postUids = new List<PostResponseContract>();
+        foreach (var post in user.PostFavorites)
+        {
+            postUids.Add(new PostResponseContract
+            {
+                Uid = post.Uid,
+                UserUId = post.CreatedBy, 
+                Name = post.Name,
+                Body = post.Body,
+                CreatedAt = post.CreatedAt,
+                Favorites = post.Favorites,
+                Likes = post.Likes,
+                UserDeleted =  post.UserDeleted,
+            });
+        }
+        
+        return postUids;
     }
 }

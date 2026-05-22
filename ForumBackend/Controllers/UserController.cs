@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using ForumBackend.Contracts.Posts;
 using ForumBackend.Contracts.User;
 using ForumBackend.Filters.Post;
 using ForumBackend.Filters.Topic;
@@ -197,6 +198,44 @@ public class UserController(IUserService userService, ILogger<UserController> lo
     }
     
     [UserExceptionFilter]
+    [PostExceptionFilter]
+    [HttpPut("{uid:guid}/removeLike/{postId:guid}")]
+    public async Task<ActionResult<UserResponseContract>> RemoveLike(
+        [FromRoute] Guid uid, [FromRoute] Guid postId, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("User with uid {uid} remove like post {postUid}.", uid, postId);
+        var updatedUser = await userService.RemoveLikePostAsync(uid, postId, cancellationToken);
+
+        if (updatedUser is null)
+        {
+            logger.LogWarning("User or post not found");
+            return NotFound();
+        }
+        
+        logger.LogInformation("User with uid: {UserUid} updated.", uid);
+        return Ok(updatedUser);
+    }
+    
+    [UserExceptionFilter]
+    [PostExceptionFilter]
+    [HttpPut("{uid:guid}/removeFavorite/{postId:guid}")]
+    public async Task<ActionResult<UserResponseContract>> RemoveFavorite(
+        [FromRoute] Guid uid, [FromRoute] Guid postId, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("User with uid {uid} remove save post {postUid}.", uid, postId);
+        var updatedUser = await userService.RemoveFavoritePostAsync(uid, postId, cancellationToken);
+
+        if (updatedUser is null)
+        {
+            logger.LogWarning("User or post not found");
+            return NotFound();
+        }
+        
+        logger.LogInformation("User with uid: {UserUid} updated.", uid);
+        return Ok(updatedUser);
+    }
+    
+    [UserExceptionFilter]
     [HttpPut("{uid:guid}/follow/{userUid:guid}")]
     public async Task<ActionResult<UserResponseContract>> Follow(
         [FromRoute] Guid uid, [FromRoute] Guid userUid, CancellationToken cancellationToken)
@@ -273,5 +312,55 @@ public class UserController(IUserService userService, ILogger<UserController> lo
 
         logger.LogInformation("User was found: {}", userCheck);
         return Ok(userCheck);
+    }
+    
+    [HttpGet("likePost/{uid:guid}")]
+    public async Task<IActionResult> GetLikePosts([FromRoute] Guid uid, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Search like posts: {}", uid);
+
+        var posts = await userService.GetLikePostUids(uid, cancellationToken);
+
+        logger.LogInformation("Posts was found: {} count", posts.Count);
+        return Ok(posts);
+    }
+    
+    [HttpGet("favoritePost/{uid:guid}")]
+    public async Task<IActionResult> GetFavoritesPosts([FromRoute] Guid uid, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Search favorite posts: {}", uid);
+
+        var posts = await userService.GetFavoritePostUids(uid, cancellationToken);
+
+        logger.LogInformation("Posts was found: {} count", posts.Count);
+        return Ok(posts);
+    }
+    
+    [HttpGet("likePostFull/{uid:guid}")]
+    public async Task<IActionResult> GetLikePostsFull([FromRoute] Guid uid, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Search like posts: {}", uid);
+
+        var posts = await userService.GetLikePostFullUids(uid, cancellationToken);
+
+        logger.LogInformation("Posts was found: {} count", posts.Count);
+        return Ok(posts);
+    }
+    
+    [HttpGet("favoritePostFull/{uid:guid}")]
+    public async Task<IActionResult> GetFavoritePostsFull([FromRoute] Guid uid, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Search favorite posts: {}", uid);
+
+        var posts = await userService.GetFavoritePostFullUids(uid, cancellationToken);
+
+        logger.LogInformation("Posts was found: {} count", posts.Count);
+        return Ok(posts);
+    }
+
+    [HttpGet("exit")]
+    public async Task<IActionResult> Exit(CancellationToken cancellationToken)
+    {
+        return Unauthorized();
     }
 }
