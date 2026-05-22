@@ -20,7 +20,7 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
             WasDeleted = comment.WasDeleted
         };
     }
-    
+
     public async Task<IReadOnlyCollection<CommentResponseContract>> GetAllAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("Getting all comments");
@@ -37,7 +37,16 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
     {
         logger.LogInformation("Getting all comments by  user uid");
 
-        var comments = await dbContext.Comments.Select(x => CreateResponse(x))
+        var comments = await dbContext.Comments.Select(x => new CommentResponseContract
+            {
+                Uid = x.Uid,
+                Body = x.Body,
+                CreatedAt = x.CreatedAt,
+                Likes = x.Likes,
+                PostUId = x.Post,
+                UserUId = x.CreatedBy,
+                WasDeleted = x.WasDeleted
+            })
             .Where(x => x.UserUId == userUid)
             .ToArrayAsync(cancellationToken);
 
@@ -46,11 +55,35 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
         return comments;
     }
 
+    public async Task<IReadOnlyCollection<CommentResponseContract>> GetAllByPostUidAsync(Guid postUid,
+        CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Getting all comments by  post uid");
+
+        var comments = await dbContext.Comments.Select(x => new CommentResponseContract
+            {
+                Uid = x.Uid,
+                Body = x.Body,
+                CreatedAt = x.CreatedAt,
+                Likes = x.Likes,
+                PostUId = x.Post,
+                UserUId = x.CreatedBy,
+                WasDeleted = x.WasDeleted
+            })
+            .Where(x => x.PostUId == postUid)
+            .ToArrayAsync(cancellationToken);
+
+        logger.LogInformation("Returning all post's comments. Count: {Count}", comments.Length);
+
+        return comments;
+    }
+
     public async Task<CommentResponseContract?> GetByUidAsync(Guid uid, CancellationToken cancellationToken)
     {
         logger.LogInformation("Getting comment by uid");
 
-        var comment = await dbContext.Comments.Select(x => CreateResponse(x)).SingleOrDefaultAsync(x => x.Uid == uid, cancellationToken);
+        var comment = await dbContext.Comments.Select(x => CreateResponse(x))
+            .SingleOrDefaultAsync(x => x.Uid == uid, cancellationToken);
 
         if (comment == null)
         {
@@ -130,7 +163,7 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
         dbContext.Comments.Remove(comment);
 
         await dbContext.SaveChangesAsync(cancellationToken);
-        
+
         logger.LogInformation("Comment and replied comments deleted with uid {commentUId}", comment.Uid);
         return true;
     }
