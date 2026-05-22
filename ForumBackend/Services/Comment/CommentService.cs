@@ -1,4 +1,5 @@
 using ForumBackend.Contracts.Comments;
+using ForumBackend.Contracts.Posts;
 using ForumBackend.Ef;
 using ForumBackend.Exceptions.Comment;
 using Microsoft.EntityFrameworkCore;
@@ -7,8 +8,11 @@ namespace ForumBackend.Services.Comment;
 
 public class CommentService(ForumDbContext dbContext, ILogger<CommentService> logger) : ICommentService
 {
-    private static CommentResponseContract CreateResponse(Ef.Entities.Comment comment)
+    private static string avatarBase = "./avatar/avatarBase.png";
+    private CommentResponseContract CreateResponse(Ef.Entities.Comment comment)
     {
+        var user = dbContext.Users.SingleOrDefault(x => x.Uid == comment.CreatedBy);
+        
         return new CommentResponseContract
         {
             Uid = comment.Uid,
@@ -17,6 +21,8 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
             Likes = comment.Likes,
             PostUId = comment.Post,
             UserUId = comment.CreatedBy,
+            UserAvatar = user?.AvatarImage ?? avatarBase,
+            UserName = user?.Name ?? "Пользователь не найден",
             WasDeleted = comment.WasDeleted
         };
     }
@@ -25,11 +31,30 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
     {
         logger.LogInformation("Getting all comments");
 
-        var comments = await dbContext.Comments.Select(x => CreateResponse(x)).ToArrayAsync(cancellationToken);
+        var comments = await dbContext.Comments.Select(x => x).ToArrayAsync(cancellationToken);
+        
+        var res = new List<CommentResponseContract>();
+        foreach (var comment in comments)
+        {
+            var user = dbContext.Users.SingleOrDefault(x => x.Uid == comment.CreatedBy);
+            
+            res.Add(new CommentResponseContract
+            {
+                Uid = comment.Uid,
+                Body = comment.Body,
+                CreatedAt = comment.CreatedAt,
+                Likes = comment.Likes,
+                PostUId = comment.Post,
+                UserUId = comment.CreatedBy,
+                UserAvatar = user?.AvatarImage ?? avatarBase,
+                UserName = user?.Name ?? "Пользователь не найден",
+                WasDeleted = comment.WasDeleted
+            });
+        }
 
         logger.LogInformation("Returning all comments. Count: {Count}", comments.Length);
 
-        return comments;
+        return res;
     }
 
     public async Task<IReadOnlyCollection<CommentResponseContract>> GetAllByUserUidAsync(Guid userUid,
@@ -37,22 +62,32 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
     {
         logger.LogInformation("Getting all comments by  user uid");
 
-        var comments = await dbContext.Comments.Select(x => new CommentResponseContract
-            {
-                Uid = x.Uid,
-                Body = x.Body,
-                CreatedAt = x.CreatedAt,
-                Likes = x.Likes,
-                PostUId = x.Post,
-                UserUId = x.CreatedBy,
-                WasDeleted = x.WasDeleted
-            })
-            .Where(x => x.UserUId == userUid)
+        var comments = await dbContext.Comments.Select(x => x)
+            .Where(x => x.CreatedBy == userUid)
             .ToArrayAsync(cancellationToken);
 
+        var res = new List<CommentResponseContract>();
+        foreach (var comment in comments)
+        {
+            var user = dbContext.Users.SingleOrDefault(x => x.Uid == comment.CreatedBy);
+            
+            res.Add(new CommentResponseContract
+            {
+                Uid = comment.Uid,
+                Body = comment.Body,
+                CreatedAt = comment.CreatedAt,
+                Likes = comment.Likes,
+                PostUId = comment.Post,
+                UserUId = comment.CreatedBy,
+                UserAvatar = user?.AvatarImage ?? avatarBase,
+                UserName = user?.Name ?? "Пользователь не найден",
+                WasDeleted = comment.WasDeleted
+            });
+        }
+        
         logger.LogInformation("Returning all user's comments. Count: {Count}", comments.Length);
 
-        return comments;
+        return res;
     }
 
     public async Task<IReadOnlyCollection<CommentResponseContract>> GetAllByPostUidAsync(Guid postUid,
@@ -60,29 +95,38 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
     {
         logger.LogInformation("Getting all comments by  post uid");
 
-        var comments = await dbContext.Comments.Select(x => new CommentResponseContract
-            {
-                Uid = x.Uid,
-                Body = x.Body,
-                CreatedAt = x.CreatedAt,
-                Likes = x.Likes,
-                PostUId = x.Post,
-                UserUId = x.CreatedBy,
-                WasDeleted = x.WasDeleted
-            })
-            .Where(x => x.PostUId == postUid)
+        var comments = await dbContext.Comments.Select(x => x)
+            .Where(x => x.Post == postUid)
             .ToArrayAsync(cancellationToken);
 
+        var res = new List<CommentResponseContract>();
+        foreach (var comment in comments)
+        {
+            var user = dbContext.Users.SingleOrDefault(x => x.Uid == comment.CreatedBy);
+            
+            res.Add(new CommentResponseContract
+            {
+                Uid = comment.Uid,
+                Body = comment.Body,
+                CreatedAt = comment.CreatedAt,
+                Likes = comment.Likes,
+                PostUId = comment.Post,
+                UserUId = comment.CreatedBy,
+                UserAvatar = user?.AvatarImage ?? avatarBase,
+                UserName = user?.Name ?? "Пользователь не найден",
+                WasDeleted = comment.WasDeleted
+            });
+        }
         logger.LogInformation("Returning all post's comments. Count: {Count}", comments.Length);
 
-        return comments;
+        return res;
     }
 
     public async Task<CommentResponseContract?> GetByUidAsync(Guid uid, CancellationToken cancellationToken)
     {
         logger.LogInformation("Getting comment by uid");
 
-        var comment = await dbContext.Comments.Select(x => CreateResponse(x))
+        var comment = await dbContext.Comments.Select(x => x)
             .SingleOrDefaultAsync(x => x.Uid == uid, cancellationToken);
 
         if (comment == null)
@@ -90,10 +134,12 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
             logger.LogWarning("Comment with uid {uid} not found", uid);
             throw new CommentNotFoundException($"Comment with uid {uid} not found");
         }
+        
+        var res = CreateResponse(comment);
 
         logger.LogInformation("Returning comment by uid {uid}", comment.Uid);
 
-        return comment;
+        return res;
     }
 
     public async Task<CommentResponseContract> CreateAsync(CreateCommentRequestContract request,
