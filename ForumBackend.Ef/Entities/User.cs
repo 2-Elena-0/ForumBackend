@@ -23,15 +23,9 @@ public partial class User
 
     public long Followers { get; set; }
 
-    public string Role { get; set; } = null!;
-
-    public DateOnly RoleGet { get; set; }
-
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
     public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
-
-    public virtual Role RoleNavigation { get; set; } = null!;
 
     public virtual ICollection<User> FollowersNavigation { get; set; } = new List<User>();
 
