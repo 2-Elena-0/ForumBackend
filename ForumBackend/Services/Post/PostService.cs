@@ -1,4 +1,5 @@
 using ForumBackend.Contracts.Posts;
+using ForumBackend.Contracts.Topic;
 using ForumBackend.Ef;
 using ForumBackend.Ef.Entities;
 using ForumBackend.Exceptions.Topic;
@@ -87,14 +88,15 @@ public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) 
     {
         logger.LogInformation("Start Getting post by uid: {Uid}", uid);
 
-        var post = await dbContext.Posts.Include(x => x.PostsImages).SingleOrDefaultAsync(x => x.Uid == uid, cancellationToken);
+        var post = await dbContext.Posts.Include(x => x.PostsImages)
+            .SingleOrDefaultAsync(x => x.Uid == uid, cancellationToken);
 
         if (post == null)
         {
             logger.LogWarning("Post with uId {Uid} not found", uid);
             throw new PostNotFoundException($"Post with uId {uid} not found");
         }
-        
+
         var response = createResponseWithImage(post);
 
         logger.LogInformation("Finished getting post by uid: {Uid}", post.Uid);
@@ -124,13 +126,13 @@ public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) 
                 Image = image,
                 Post = post.Uid,
             };
-            
+
             await dbContext.PostsImages.AddAsync(postImage, cancellationToken);
         }
-        
+
         dbContext.Update(post);
         await dbContext.SaveChangesAsync(cancellationToken);
-        
+
         logger.LogInformation("Finished Creating post: {Post}. Post images: {im}", post.Uid, post.PostsImages.Count);
 
         var response = createResponseWithImage(post);
@@ -178,37 +180,6 @@ public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) 
         return response;
     }
 
-    public async Task<PostResponseContract?> AddTopicToPostAsync(
-        Guid postUid, Guid topicUid, CancellationToken cancellationToken)
-    {
-        logger.LogInformation("Starting add topic {topicUid} to post {postUid}", topicUid, postUid);
-
-        var post = dbContext.Posts.SingleOrDefault(x => x.Uid == postUid);
-        if (post == null)
-        {
-            logger.LogWarning("Post with uId {Uid} not found", postUid);
-            throw new PostNotFoundException($"Post with uId {postUid} not found");
-        }
-
-        var topic = dbContext.Topics.SingleOrDefault(x => x.Uid == topicUid);
-        if (topic == null)
-        {
-            logger.LogWarning("Topic with uId {Uid} not found", topicUid);
-            throw new TopicNotFoundException($"Topic with uId {topicUid} not found");
-        }
-
-        post.Topics.Add(topic);
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        logger.LogInformation("Finished add topic: {Topic}. Response created.", topicUid);
-
-        var response = CreateResponse(post);
-
-        logger.LogInformation("Finished add topic: {Topic}. Response created.", response.Uid);
-
-        return response;
-    }
-
     public async Task<bool> DeleteAsync(Guid uid, CancellationToken cancellationToken)
     {
         logger.LogInformation("Starting post deletion. Post uId: {uId}", uid);
@@ -228,7 +199,7 @@ public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) 
         post.PostsImages.Clear();
 
         dbContext.PostsImages.RemoveRange(post.PostsImages);
-        
+
         dbContext.Comments.RemoveRange(post.Comments);
 
         dbContext.Posts.Remove(post);

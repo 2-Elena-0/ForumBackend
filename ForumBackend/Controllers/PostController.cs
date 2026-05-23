@@ -1,4 +1,5 @@
 using ForumBackend.Contracts.Posts;
+using ForumBackend.Contracts.Topic;
 using ForumBackend.Ef.Entities;
 using ForumBackend.Filters.Post;
 using ForumBackend.Filters.Topic;
@@ -103,29 +104,6 @@ public class PostController(IPostService postService, ILogger<PostController> lo
         if (updatedPost is null)
         {
             logger.LogWarning("post with uid {PostUid} was not found for update.", uid);
-            return NotFound();
-        }
-
-        logger.LogInformation("post with uid: {PostUid} updated.", uid);
-
-        return Ok(updatedPost);
-    }
-    
-    [PostExceptionFilter]
-    [TopicExceptionFilter]
-    [HttpPut("{uid:guid}/topic/{topicUid:guid}")]
-    public async Task<ActionResult<PostResponseContract>> AddTopic(
-        [FromRoute] Guid uid,
-        [FromRoute] Guid topicUid,
-        CancellationToken cancellationToken)
-    {
-        logger.LogInformation("Adding topic {topicUid} to post with uid: {PostUid}.", topicUid, uid);
-
-        var updatedPost = await postService.AddTopicToPostAsync(uid, topicUid, cancellationToken);
-
-        if (updatedPost is null)
-        {
-            logger.LogWarning("post or topic was not found");
             return NotFound();
         }
 

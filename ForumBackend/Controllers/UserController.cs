@@ -18,11 +18,13 @@ namespace ForumBackend.Controllers;
 [Route("api/[controller]")]
 public class UserController(IUserService userService, ILogger<UserController> logger, IConfiguration _configuration) : ControllerBase
 {
+    private Claim[] claims;
+    
     [NonAction] 
     public string TokenGenerate(string uid, string email) 
     { 
         Console.WriteLine($"Cofiguration: {_configuration["Jwt:Key"]}"); 
-        var claims = new[] 
+        claims = new[] 
         { 
             new Claim(ClaimTypes.NameIdentifier, uid), 
             new Claim(ClaimTypes.Email, email), 
@@ -159,23 +161,29 @@ public class UserController(IUserService userService, ILogger<UserController> lo
         return Ok(updatedUser);
     }
 
+    [Authorize]
     [UserExceptionFilter]
     [PostExceptionFilter]
-    [HttpPut("{uid:guid}/like/{postId:guid}")]
-    public async Task<ActionResult<UserResponseContract>> Like(
-        [FromRoute] Guid uid, [FromRoute] Guid postId, CancellationToken cancellationToken)
+    [HttpPut("/like/{postId:guid}")]
+    public async Task<ActionResult<UserResponseContract>> Like([FromRoute] Guid postId, CancellationToken cancellationToken)
     {
-        logger.LogInformation("User with uid {uid} liking post {postUid}.", uid, postId);
-        var updatedUser = await userService.AddLikePostAsync(uid, postId, cancellationToken);
-
-        if (updatedUser is null)
+        var uidstring = claims[0].Value;
+        if (Guid.TryParse(uidstring, out var uid))
         {
-            logger.LogWarning("User or post not found");
-            return NotFound();
-        }
+            logger.LogInformation("User with uid {uid} liking post {postUid}.", uid, postId);
+            var updatedUser = await userService.AddLikePostAsync(uid, postId, cancellationToken);
+
+            if (updatedUser is null)
+            {
+                logger.LogWarning("User or post not found");
+                return NotFound();
+            }
         
-        logger.LogInformation("User with uid: {UserUid} updated.", uid);
-        return Ok(updatedUser);
+            logger.LogInformation("User with uid: {UserUid} updated.", uid);
+            return Ok(updatedUser);
+        }
+        return Unauthorized();
+
     }
     
     [UserExceptionFilter]

@@ -1,4 +1,5 @@
 using ForumBackend.Contracts.Posts;
+using ForumBackend.Contracts.Topic;
 
 namespace ForumBackend.Services.Post;
 
@@ -13,8 +14,6 @@ public interface IPostService
     Task<PostResponseWithImagesContract> CreateAsync(CreatePostRequestContract request, CancellationToken cancellationToken);
 
     Task<PostResponseWithImagesContract?> UpdateAsync(Guid uid, UpdatePostRequestContract request, CancellationToken cancellationToken);
-
-    Task<PostResponseContract?> AddTopicToPostAsync(Guid postUid, Guid topicUid, CancellationToken cancellationToken);
     
     Task<bool> DeleteAsync(Guid uid, CancellationToken cancellationToken);
 }

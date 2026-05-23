@@ -40,6 +40,19 @@ public class TopicController(ITopicService topicService, ILogger<TopicController
 
         return Ok(topic);
     }
+    
+    [HttpGet("getPostTopics/{uid:guid}")]
+    public async Task<ActionResult<TopicResponseContract>> AddTopic([FromRoute] Guid uid,
+        CancellationToken cancellationToken)
+    {
+        logger.LogInformation("getting post topics ");
+
+        var topics = await topicService.GetPostTopicsAsync(uid, cancellationToken);
+
+        logger.LogInformation("got topics for post: {name}. ", uid);
+
+        return Ok(topics);
+    }
 
     [HttpPost]
     public async Task<ActionResult<TopicResponseContract>> Create(
@@ -54,6 +67,20 @@ public class TopicController(ITopicService topicService, ILogger<TopicController
             createdTopic.UId);
 
         return CreatedAtAction(nameof(GetByUid), new { uid = createdTopic.UId }, createdTopic);
+    }
+    
+    [HttpPost("addTopic/{uid:guid}/ToPost/{postUid:guid}")]
+    public async Task<ActionResult<TopicResponseContract>> AddTopic([FromRoute] Guid uid,
+        [FromRoute] Guid postUid,
+        CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Adding topic to post {}.", postUid);
+
+        var createdTopic = await topicService.AddTopicToPostAsync(postUid, uid, cancellationToken);
+
+        logger.LogInformation("Added topic to post {postuid}. topic UId: {UId}", postUid, uid);
+
+        return CreatedAtAction(nameof(GetByUid), new { uid = postUid }, createdTopic);
     }
 
     [TopicExceptionFilter]

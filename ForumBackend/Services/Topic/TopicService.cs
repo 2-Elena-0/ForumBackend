@@ -1,6 +1,8 @@
+using ForumBackend.Contracts.Posts;
 using ForumBackend.Contracts.Topic;
 using ForumBackend.Ef;
 using ForumBackend.Exceptions.Topic;
+using ForumBackend.Filters.Post;
 using Microsoft.EntityFrameworkCore;
 
 namespace ForumBackend.Services.Topic;
@@ -75,6 +77,78 @@ public class TopicService(ForumDbContext dbContext, ILogger<TopicService> logger
         return response;
     }
 
+    public async Task<IReadOnlyCollection<TopicResponseContract>> AddTopicToPostAsync(
+        Guid postUid, Guid topicUid, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Starting add topic {topicUid} to post {postUid}", topicUid, postUid);
+
+        var post = dbContext.Posts.Include(x => x.Topics).SingleOrDefault(x => x.Uid == postUid);
+        if (post == null)
+        {
+            logger.LogWarning("Post with uId {Uid} not found", postUid);
+            throw new PostNotFoundException($"Post with uId {postUid} not found");
+        }
+
+        var topic = dbContext.Topics.SingleOrDefault(x => x.Uid == topicUid);
+        if (topic == null)
+        {
+            logger.LogWarning("Topic with uId {Uid} not found", topicUid);
+            throw new TopicNotFoundException($"Topic with uId {topicUid} not found");
+        }
+
+        if (!post.Topics.Contains(topic))
+        {
+            post.Topics.Add(topic);
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        logger.LogInformation("Finished add topic: {Topic}. Response created.", topicUid);
+
+        var response = new List<TopicResponseContract>();
+        foreach (var postTopic in post.Topics)
+        {
+            response.Add(new TopicResponseContract
+            {
+                UId = postTopic.Uid,
+                Title = postTopic.Name,
+                Description = postTopic.Description,
+            });
+        }
+
+        logger.LogInformation("Finished add topic. Topic count: {Topic}. Response created.", response.Count);
+
+        return response;
+    }
+
+    public async Task<IReadOnlyCollection<TopicResponseContract>> GetPostTopicsAsync(Guid uid,
+        CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Starting get all topic of post with uid {}", uid);
+
+        var post = dbContext.Posts.Include(x => x.Topics).SingleOrDefault(x => x.Uid == uid);
+
+        if (post == null)
+        {
+            logger.LogWarning("Post with {uId} not found", uid);
+            throw new PostNotFoundException($"Post with uId {uid} not found");
+        }
+
+        var topics = new List<TopicResponseContract>();
+        foreach (var postTopic in post.Topics)
+        {
+            topics.Add(new TopicResponseContract
+            {
+                UId = postTopic.Uid,
+                Title = postTopic.Name,
+                Description = postTopic.Description,
+            });
+        }
+
+        logger.LogInformation("Ending search topics. Topic count: {}", topics.Count);
+
+        return topics;
+    }
+
     public async Task<TopicResponseContract?> UpdateAsync(Guid uid, UpdateTopicRequestContract request,
         CancellationToken cancellationToken)
     {
@@ -121,7 +195,7 @@ public class TopicService(ForumDbContext dbContext, ILogger<TopicService> logger
 
         topic.Posts.Clear();
         topic.Users.Clear();
-        
+
         dbContext.Topics.Remove(topic);
 
         await dbContext.SaveChangesAsync(cancellationToken);
