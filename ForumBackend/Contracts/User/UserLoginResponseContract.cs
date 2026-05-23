@@ -11,7 +11,5 @@ public class UserLoginResponseContract
     public string AvatarUrl { get; init; } = "";
     public required DateOnly CreatedAt { get; init; }
     public required long FollowersCount { get; init; }
-    public required string Role { get; init; } 
-    public required DateOnly RoleGet { get; init; }
     public required PasswordVerificationResult PwdVerificationResult { get; init; }
 }

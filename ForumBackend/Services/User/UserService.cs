@@ -23,8 +23,6 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
             Description = user.Description ?? "",
             CreatedAt = user.CreatedAt,
             FollowersCount = user.Followers,
-            Role = user.Role,
-            RoleGet = user.RoleGet
         };
     }
     
@@ -51,8 +49,6 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
                 Description = x.Description ?? "",
                 CreatedAt = x.CreatedAt,
                 FollowersCount = x.Followers,
-                Role = x.Role,
-                RoleGet = x.RoleGet
             })
             .Where(x => x.Uid == uid)
             .SingleOrDefaultAsync(cancellationToken);
@@ -92,8 +88,6 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
             Description = user.Description ?? "",
             CreatedAt = user.CreatedAt,
             FollowersCount = user.Followers,
-            Role = user.Role,
-            RoleGet = user.RoleGet,
             PwdVerificationResult = pwd
         };
         
@@ -116,7 +110,6 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
             Email = request.Email,
             HashPassword = hashPwd,
             AvatarImage = avatarBase,
-            Role = request.Role,
         };
 
         await dbContext.Users.AddAsync(user, cancellationToken);

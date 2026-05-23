@@ -17,8 +17,4 @@ public class CreateUserRequestContract
     [Required]
     [StringLength(255, MinimumLength = 8, ErrorMessage = "Password must be at least 8 characters long.")]
     public required string Password { get; init; }
-
-    [Required]
-    [StringLength(255, MinimumLength = 3, ErrorMessage = "Avatar url must be between 3 and 255 characters.")]
-    public string Role { get; init; } = "standard";
 }

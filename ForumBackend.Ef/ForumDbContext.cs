@@ -22,8 +22,6 @@ public partial class ForumDbContext : DbContext
 
     public virtual DbSet<PostsImage> PostsImages { get; set; }
 
-    public virtual DbSet<Role> Roles { get; set; }
-
     public virtual DbSet<Topic> Topics { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
@@ -144,27 +142,6 @@ public partial class ForumDbContext : DbContext
                 .HasConstraintName("posts_images_posts_fk");
         });
 
-        modelBuilder.Entity<Role>(entity =>
-        {
-            entity.HasKey(e => e.Name).HasName("role_pk");
-
-            entity.ToTable("role", "Forum");
-
-            entity.Property(e => e.Name)
-                .HasColumnType("character varying")
-                .HasColumnName("name");
-            entity.Property(e => e.CreateComment)
-                .HasDefaultValue(true)
-                .HasColumnName("create_comment");
-            entity.Property(e => e.CreatePost)
-                .HasDefaultValue(true)
-                .HasColumnName("create_post");
-            entity.Property(e => e.DeleteAnyComment).HasColumnName("delete_any_comment");
-            entity.Property(e => e.DeleteAnyPost).HasColumnName("delete_any_post");
-            entity.Property(e => e.RefactorAnyPost).HasColumnName("refactor_any_post");
-            entity.Property(e => e.ValidDays).HasColumnName("valid_days");
-        });
-
         modelBuilder.Entity<Topic>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("topic_pk");
@@ -223,20 +200,9 @@ public partial class ForumDbContext : DbContext
             entity.Property(e => e.Name)
                 .HasColumnType("character varying")
                 .HasColumnName("name");
-            entity.Property(e => e.Role)
-                .HasColumnType("character varying")
-                .HasColumnName("role");
-            entity.Property(e => e.RoleGet)
-                .HasDefaultValueSql("now()")
-                .HasColumnName("role_get");
             entity.Property(e => e.Uid)
                 .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("uid");
-
-            entity.HasOne(d => d.RoleNavigation).WithMany(p => p.Users)
-                .HasForeignKey(d => d.Role)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("users_role_fk");
 
             entity.HasMany(d => d.FollowersNavigation).WithMany(p => p.Follows)
                 .UsingEntity<Dictionary<string, object>>(
