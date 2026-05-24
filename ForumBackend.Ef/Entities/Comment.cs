@@ -19,8 +19,6 @@ public partial class Comment
 
     public long Likes { get; set; }
 
-    public bool WasDeleted { get; set; }
-
     public virtual User CreatedByNavigation { get; set; } = null!;
 
     public virtual Post PostNavigation { get; set; } = null!;

@@ -24,20 +24,10 @@ public interface IUserService
     
     Task<UserResponseContract?> RemoveFavoritePostAsync(Guid userUid, Guid postUid, CancellationToken cancellationToken);
     
-    Task<UserResponseContract?> AddFollowAsync(Guid userFollowerUid, Guid followUid,
-        CancellationToken cancellationToken);
-
     Task<UserResponseContract?> AddInterestingTopic(Guid userUid, Guid topicUid, CancellationToken cancellationToken);
 
-
     Task<bool> DeleteAsync(Guid uid, CancellationToken cancellationToken);
-
-    Task<bool> CheckName(string name, CancellationToken cancellationToken);
-
-    Task<bool> CheckEmail(string email, CancellationToken cancellationToken);
-
-    Task<string?> GetAvatarByUidAsync(Guid uid, CancellationToken cancellationToken);
-
+    
     Task<IReadOnlyCollection<string>> GetLikePostUids(Guid uid, CancellationToken cancellationToken);
     
     Task<IReadOnlyCollection<string>> GetFavoritePostUids(Guid uid, CancellationToken cancellationToken);

@@ -27,10 +27,6 @@ public partial class User
 
     public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
 
-    public virtual ICollection<User> FollowersNavigation { get; set; } = new List<User>();
-
-    public virtual ICollection<User> Follows { get; set; } = new List<User>();
-
     public virtual ICollection<Post> PostFavorites { get; set; } = new List<Post>();
 
     public virtual ICollection<Post> PostLikes { get; set; } = new List<Post>();

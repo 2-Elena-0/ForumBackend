@@ -45,7 +45,6 @@ public class UserController(IUserService userService, ILogger<UserController> lo
         return resToken; 
     } 
     
-    //[Authorize]
     [HttpGet]
     public async Task<ActionResult<UserResponseContract[]>> GetAll(CancellationToken cancellationToken)
     {
@@ -58,7 +57,6 @@ public class UserController(IUserService userService, ILogger<UserController> lo
         return Ok(users);
     }
 
-    //[Authorize]
     [UserExceptionFilter]
     [HttpGet("{uid:guid}")]
     public async Task<ActionResult<UserResponseContract>> GetByUid([FromRoute] Guid uid,
@@ -244,24 +242,6 @@ public class UserController(IUserService userService, ILogger<UserController> lo
     }
     
     [UserExceptionFilter]
-    [HttpPut("{uid:guid}/follow/{userUid:guid}")]
-    public async Task<ActionResult<UserResponseContract>> Follow(
-        [FromRoute] Guid uid, [FromRoute] Guid userUid, CancellationToken cancellationToken)
-    {
-        logger.LogInformation("User with uid {uid} starting follow user {userUid}.", uid, userUid);
-        var updatedUser = await userService.AddFollowAsync(uid, userUid, cancellationToken);
-
-        if (updatedUser is null)
-        {
-            logger.LogWarning("User not found");
-            return NotFound();
-        }
-        
-        logger.LogInformation("User with uid: {uid} updated.", uid);
-        return Ok(updatedUser);
-    }
-    
-    [UserExceptionFilter]
     [TopicExceptionFilter]
     [HttpPut("{uid:guid}/topic/{topicUid:guid}")]
     public async Task<ActionResult<UserResponseContract>> AddTopic(
@@ -298,28 +278,6 @@ public class UserController(IUserService userService, ILogger<UserController> lo
         logger.LogInformation("User with uid: {UserUid} deleted.", uid);
 
         return NoContent();
-    }
-    
-    [HttpGet("checkEmail/{email}")]
-    public async Task<IActionResult> CheckEmail([FromRoute] string email, CancellationToken cancellationToken)
-    {
-        logger.LogInformation("Checking availability user with email: {email}", email);
-
-        var userCheck = await userService.CheckEmail(email, cancellationToken);
-
-        logger.LogInformation("User was found: {}", userCheck);
-        return Ok(userCheck);
-    }
-    
-    [HttpGet("checkName/{name}")]
-    public async Task<IActionResult> CheckName([FromRoute] string name, CancellationToken cancellationToken)
-    {
-        logger.LogInformation("Checking availability user with name: {name}", name);
-
-        var userCheck = await userService.CheckName(name, cancellationToken);
-
-        logger.LogInformation("User was found: {}", userCheck);
-        return Ok(userCheck);
     }
     
     [HttpGet("likePost/{uid:guid}")]

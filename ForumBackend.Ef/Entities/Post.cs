@@ -21,8 +21,6 @@ public partial class Post
 
     public DateTimeOffset CreatedAt { get; set; }
 
-    public bool UserDeleted { get; set; }
-
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
     public virtual User CreatedByNavigation { get; set; } = null!;

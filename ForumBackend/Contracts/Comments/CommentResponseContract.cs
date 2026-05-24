@@ -9,6 +9,4 @@ public class CommentResponseContract
     public required Guid PostUId { get; init; }
     public required string Body { get; init; }
     public required DateTimeOffset CreatedAt { get; init; }
-    public required long Likes { get; init; }
-    public required bool WasDeleted { get; init; }
 }

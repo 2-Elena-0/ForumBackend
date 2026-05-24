@@ -18,12 +18,10 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
             Uid = comment.Uid,
             Body = comment.Body,
             CreatedAt = comment.CreatedAt,
-            Likes = comment.Likes,
             PostUId = comment.Post,
             UserUId = comment.CreatedBy,
             UserAvatar = user?.AvatarImage ?? avatarBase,
             UserName = user?.Name ?? "Пользователь не найден",
-            WasDeleted = comment.WasDeleted
         };
     }
 
@@ -43,12 +41,10 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
                 Uid = comment.Uid,
                 Body = comment.Body,
                 CreatedAt = comment.CreatedAt,
-                Likes = comment.Likes,
                 PostUId = comment.Post,
                 UserUId = comment.CreatedBy,
                 UserAvatar = user?.AvatarImage ?? avatarBase,
                 UserName = user?.Name ?? "Пользователь не найден",
-                WasDeleted = comment.WasDeleted
             });
         }
 
@@ -76,12 +72,10 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
                 Uid = comment.Uid,
                 Body = comment.Body,
                 CreatedAt = comment.CreatedAt,
-                Likes = comment.Likes,
                 PostUId = comment.Post,
                 UserUId = comment.CreatedBy,
                 UserAvatar = user?.AvatarImage ?? avatarBase,
                 UserName = user?.Name ?? "Пользователь не найден",
-                WasDeleted = comment.WasDeleted
             });
         }
         
@@ -109,12 +103,10 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
                 Uid = comment.Uid,
                 Body = comment.Body,
                 CreatedAt = comment.CreatedAt,
-                Likes = comment.Likes,
                 PostUId = comment.Post,
                 UserUId = comment.CreatedBy,
                 UserAvatar = user?.AvatarImage ?? avatarBase,
                 UserName = user?.Name ?? "Пользователь не найден",
-                WasDeleted = comment.WasDeleted
             });
         }
         logger.LogInformation("Returning all post's comments. Count: {Count}", comments.Length);
@@ -180,7 +172,6 @@ public class CommentService(ForumDbContext dbContext, ILogger<CommentService> lo
         }
 
         comment.Body = request.Body;
-        comment.WasDeleted = request.WasDeleted;
 
         dbContext.Comments.Update(comment);
         await dbContext.SaveChangesAsync(cancellationToken);

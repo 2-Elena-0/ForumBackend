@@ -18,5 +18,4 @@ public class PostResponseWithImagesContract
     
     public required ICollection<string> Images { get; init; } = new List<string>();
     
-    public required bool UserDeleted { get; init; }
 }

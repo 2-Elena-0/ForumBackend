@@ -9,5 +9,7 @@ public partial class PostsImage
 
     public string Image { get; set; } = null!;
 
+    public long Id { get; set; }
+
     public virtual Post PostNavigation { get; set; } = null!;
 }

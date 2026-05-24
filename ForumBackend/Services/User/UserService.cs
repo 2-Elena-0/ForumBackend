@@ -302,40 +302,6 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
         return response;
     }
 
-    public async Task<UserResponseContract?> AddFollowAsync(
-        Guid userFollowerUid, Guid followUid, CancellationToken cancellationToken)
-    {
-        logger.LogInformation("Starting add follow user with uid {followUid} to user {userFollowerUid}", followUid,
-            userFollowerUid);
-
-        var user = dbContext.Users.SingleOrDefault(x => x.Uid == userFollowerUid);
-
-        if (user == null)
-        {
-            logger.LogWarning("User not found: {Uid}", userFollowerUid);
-            throw new UserNotFoundException($"User with uid {userFollowerUid} not found");
-        }
-        
-        var userFollow = dbContext.Users.SingleOrDefault(x => x.Uid == followUid);
-
-        if (userFollow == null)
-        {
-            logger.LogWarning("Follow not found: {FollowUid}", followUid);
-            throw new UserNotFoundException($"Follow with uid {followUid} not found");
-        }
-        
-        user.Follows.Add(userFollow);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        
-        logger.LogInformation("Ending add follow user to user");
-        
-        var response = CreateResponse(user);
-        
-        logger.LogInformation("Finished add follow user to user");
-        
-        return response;
-    }
-
     public async Task<UserResponseContract?> AddInterestingTopic(
         Guid userUid, Guid topicUid, CancellationToken cancellationToken)
     {
@@ -381,29 +347,13 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
 
         user.PostLikes.Clear();
         user.PostFavorites.Clear();
-        user.Follows.Clear();
         user.Topics.Clear();
         dbContext.Users.Remove(user);
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("Deleted user {Uid}'s likes, favorites, interesting topics and follows", user.Uid);
-
-
-        foreach (var comment in user.Comments)
-        {
-            comment.WasDeleted = true;
-            dbContext.Comments.Update(comment);
-        }
-
-        foreach (var post in user.Posts)
-        {
-            post.UserDeleted = true;
-            dbContext.Posts.Update(post);
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-
+        
         logger.LogInformation("Deleting was ended");
         return true;
     }
@@ -520,7 +470,6 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
                 CreatedAt = post.CreatedAt,
                 Favorites = post.Favorites,
                 Likes = post.Likes,
-                UserDeleted =  post.UserDeleted,
             });
         }
         
@@ -551,7 +500,6 @@ public class UserService(ForumDbContext dbContext, ILogger<UserService> logger) 
                 CreatedAt = post.CreatedAt,
                 Favorites = post.Favorites,
                 Likes = post.Likes,
-                UserDeleted =  post.UserDeleted,
             });
         }
         

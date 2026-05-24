@@ -22,7 +22,6 @@ public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) 
             CreatedAt = post.CreatedAt,
             Favorites = post.Favorites,
             Likes = post.Likes,
-            UserDeleted = post.UserDeleted,
         };
     }
 
@@ -45,7 +44,6 @@ public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) 
             CreatedAt = post.CreatedAt,
             Favorites = post.Favorites,
             Likes = post.Likes,
-            UserDeleted = post.UserDeleted,
             Images = images
         };
     }
@@ -109,7 +107,6 @@ public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) 
                 CreatedAt = x.CreatedAt,
                 Favorites = x.Favorites,
                 Likes = x.Likes,
-                UserDeleted = x.UserDeleted,
             })
             .Where(x => x.UserUId == userUid)
             .ToArrayAsync(cancellationToken);

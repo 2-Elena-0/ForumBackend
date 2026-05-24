@@ -54,7 +54,6 @@ public partial class ForumDbContext : DbContext
             entity.Property(e => e.Uid)
                 .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("uid");
-            entity.Property(e => e.WasDeleted).HasColumnName("was_deleted");
 
             entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.Comments)
                 .HasPrincipalKey(p => p.Uid)
@@ -94,7 +93,6 @@ public partial class ForumDbContext : DbContext
             entity.Property(e => e.Uid)
                 .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("uid");
-            entity.Property(e => e.UserDeleted).HasColumnName("user_deleted");
 
             entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.Posts)
                 .HasPrincipalKey(p => p.Uid)
@@ -126,14 +124,17 @@ public partial class ForumDbContext : DbContext
 
         modelBuilder.Entity<PostsImage>(entity =>
         {
-            entity.HasKey(e => new { e.Post, e.Image }).HasName("posts_images_pk");
+            entity.HasKey(e => e.Id).HasName("posts_images_pk");
 
             entity.ToTable("posts_images", "Forum");
 
-            entity.Property(e => e.Post).HasColumnName("post");
+            entity.Property(e => e.Id)
+                .UseIdentityAlwaysColumn()
+                .HasColumnName("id");
             entity.Property(e => e.Image)
                 .HasColumnType("character varying")
                 .HasColumnName("image");
+            entity.Property(e => e.Post).HasColumnName("post");
 
             entity.HasOne(d => d.PostNavigation).WithMany(p => p.PostsImages)
                 .HasPrincipalKey(p => p.Uid)
@@ -203,48 +204,6 @@ public partial class ForumDbContext : DbContext
             entity.Property(e => e.Uid)
                 .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("uid");
-
-            entity.HasMany(d => d.FollowersNavigation).WithMany(p => p.Follows)
-                .UsingEntity<Dictionary<string, object>>(
-                    "UserFollow",
-                    r => r.HasOne<User>().WithMany()
-                        .HasPrincipalKey("Uid")
-                        .HasForeignKey("Follower")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("follows_users_fk"),
-                    l => l.HasOne<User>().WithMany()
-                        .HasPrincipalKey("Uid")
-                        .HasForeignKey("Follow")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("follows_users_fk_1"),
-                    j =>
-                    {
-                        j.HasKey("Follow", "Follower").HasName("user_follow_pk");
-                        j.ToTable("user_follow", "Forum");
-                        j.IndexerProperty<Guid>("Follow").HasColumnName("follow");
-                        j.IndexerProperty<Guid>("Follower").HasColumnName("follower");
-                    });
-
-            entity.HasMany(d => d.Follows).WithMany(p => p.FollowersNavigation)
-                .UsingEntity<Dictionary<string, object>>(
-                    "UserFollow",
-                    r => r.HasOne<User>().WithMany()
-                        .HasPrincipalKey("Uid")
-                        .HasForeignKey("Follow")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("follows_users_fk_1"),
-                    l => l.HasOne<User>().WithMany()
-                        .HasPrincipalKey("Uid")
-                        .HasForeignKey("Follower")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("follows_users_fk"),
-                    j =>
-                    {
-                        j.HasKey("Follow", "Follower").HasName("user_follow_pk");
-                        j.ToTable("user_follow", "Forum");
-                        j.IndexerProperty<Guid>("Follow").HasColumnName("follow");
-                        j.IndexerProperty<Guid>("Follower").HasColumnName("follower");
-                    });
 
             entity.HasMany(d => d.PostFavorites).WithMany(p => p.UserFavorites)
                 .UsingEntity<Dictionary<string, object>>(
