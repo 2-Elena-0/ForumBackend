@@ -17,5 +17,7 @@ public interface ITopicService
     
     Task<IReadOnlyCollection<TopicResponseContract>> GetPostTopicsAsync(Guid uid, CancellationToken cancellationToken);
 
+    Task<IReadOnlyCollection<TopicResponseContract>> GetUserTopicsAsync(Guid uid, CancellationToken cancellationToken);
+
     Task<bool> DeleteAsync(Guid uid, CancellationToken cancellationToken);
 }

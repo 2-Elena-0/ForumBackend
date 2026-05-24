@@ -2,6 +2,7 @@ using ForumBackend.Contracts.Posts;
 using ForumBackend.Contracts.Topic;
 using ForumBackend.Ef;
 using ForumBackend.Exceptions.Topic;
+using ForumBackend.Exceptions.User;
 using ForumBackend.Filters.Post;
 using Microsoft.EntityFrameworkCore;
 
@@ -141,6 +142,35 @@ public class TopicService(ForumDbContext dbContext, ILogger<TopicService> logger
                 UId = postTopic.Uid,
                 Title = postTopic.Name,
                 Description = postTopic.Description,
+            });
+        }
+
+        logger.LogInformation("Ending search topics. Topic count: {}", topics.Count);
+
+        return topics;
+    }
+    
+    public async Task<IReadOnlyCollection<TopicResponseContract>> GetUserTopicsAsync(Guid uid,
+        CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Starting get all topic of post with uid {}", uid);
+
+        var user = dbContext.Users.Include(x => x.Topics).SingleOrDefault(x => x.Uid == uid);
+
+        if (user == null)
+        {
+            logger.LogWarning("User with {uId} not found", uid);
+            throw new UserNotFoundException($"Post with uId {uid} not found");
+        }
+
+        var topics = new List<TopicResponseContract>();
+        foreach (var userTopic in user.Topics)
+        {
+            topics.Add(new TopicResponseContract
+            {
+                UId = userTopic.Uid,
+                Title = userTopic.Name,
+                Description = userTopic.Description,
             });
         }
 

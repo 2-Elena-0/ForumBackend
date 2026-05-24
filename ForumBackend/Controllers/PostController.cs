@@ -12,29 +12,24 @@ namespace ForumBackend.Controllers;
 [Route("api/[controller]")]
 public class PostController(IPostService postService, ILogger<PostController> logger) : ControllerBase
 {
-    // [NonAction]
-    // private static PostResponseWithImagesContract CreatePostResponseWithAvatarContract(PostResponseContract post,
-    //     string avatar)
-    // {
-    //     return new PostResponseWithImagesContract
-    //     {
-    //         Uid = post.Uid,
-    //         Name = post.Name,
-    //         Body = post.Body,
-    //         CreatedAt = post.CreatedAt,
-    //         Favorites = post.Favorites,
-    //         Likes =  post.Likes,
-    //         UserUId = post.UserUId,
-    //         UserDeleted = post.UserDeleted,
-    //     };
-    // }
-    
     [HttpGet]
     public async Task<ActionResult<PostResponseContract[]>> GetAll(CancellationToken cancellationToken)
     {
         logger.LogInformation("Getting all posts.");
 
         var posts = await postService.GetAllAsync(cancellationToken);
+
+        logger.LogInformation("Posts received {Count} posts.", posts.Count);
+
+        return Ok(posts);
+    }
+    
+    [HttpGet("/interesting/{uid:guid}")]
+    public async Task<ActionResult<PostResponseContract[]>> GetAll(Guid uid, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Getting all interesting posts.");
+
+        var posts = await postService.GetInterestingPostsAsync(uid, cancellationToken);
 
         logger.LogInformation("Posts received {Count} posts.", posts.Count);
 

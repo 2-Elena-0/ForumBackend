@@ -41,15 +41,28 @@ public class TopicController(ITopicService topicService, ILogger<TopicController
         return Ok(topic);
     }
     
-    [HttpGet("getPostTopics/{uid:guid}")]
-    public async Task<ActionResult<TopicResponseContract>> AddTopic([FromRoute] Guid uid,
+    [HttpGet("getPostTopics/{postUid:guid}")]
+    public async Task<ActionResult<TopicResponseContract>> AddTopic([FromRoute] Guid postUid,
         CancellationToken cancellationToken)
     {
         logger.LogInformation("getting post topics ");
 
-        var topics = await topicService.GetPostTopicsAsync(uid, cancellationToken);
+        var topics = await topicService.GetPostTopicsAsync(postUid, cancellationToken);
 
-        logger.LogInformation("got topics for post: {name}. ", uid);
+        logger.LogInformation("got topics for post: {name}. ", postUid);
+
+        return Ok(topics);
+    }
+    
+    [HttpGet("getUserTopics/{userUid:guid}")]
+    public async Task<ActionResult<TopicResponseContract>> GetUserTopic([FromRoute] Guid userUid,
+        CancellationToken cancellationToken)
+    {
+        logger.LogInformation("getting user topics ");
+
+        var topics = await topicService.GetUserTopicsAsync(userUid, cancellationToken);
+
+        logger.LogInformation("got topics for user: {name}. ", userUid);
 
         return Ok(topics);
     }

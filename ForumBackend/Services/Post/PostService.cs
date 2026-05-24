@@ -3,6 +3,7 @@ using ForumBackend.Contracts.Topic;
 using ForumBackend.Ef;
 using ForumBackend.Ef.Entities;
 using ForumBackend.Exceptions.Topic;
+using ForumBackend.Exceptions.User;
 using ForumBackend.Filters.Post;
 using Microsoft.EntityFrameworkCore;
 
@@ -56,6 +57,40 @@ public class PostService(ForumDbContext dbContext, ILogger<PostService> logger) 
         var posts = await dbContext.Posts.Select(x => CreateResponse(x)).ToArrayAsync(cancellationToken);
 
         logger.LogInformation("Finished getting all users. Posts count: {Count}", posts.Length);
+
+        return posts;
+    }
+
+    public async Task<IReadOnlyCollection<PostResponseContract>> GetInterestingPostsAsync(Guid userUid,
+        CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Start Getting interesting posts");
+
+        var user = dbContext.Users.Include(x => x.Topics).ThenInclude(x => x.Posts).SingleOrDefault(x => x.Uid == userUid);
+
+        if (user == null)
+        {
+            logger.LogWarning("User with id {UserId} not found", userUid);
+            throw new UserNotFoundException("User with id {UserId} not found");
+        }
+
+        var topics = user.Topics;
+        var postsP = new List<Ef.Entities.Post>();
+
+        foreach (var topic in topics)
+        {
+            postsP.AddRange(topic.Posts);
+        }
+
+        var posts = new List<PostResponseContract>();
+
+        foreach (var post in postsP)
+        {
+            var p = CreateResponse(post);
+            if (posts.Find(x => x.Uid == p.Uid) == null) posts.Add(p);
+        }
+
+        logger.LogInformation("Finished getting all users. Posts count: {Count}", posts.Count);
 
         return posts;
     }
