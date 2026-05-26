@@ -215,7 +215,7 @@ public class TopicService(ForumDbContext dbContext, ILogger<TopicService> logger
     {
         logger.LogInformation("Starting deleting topic with uid: {Uid}", uid);
 
-        var topic = await dbContext.Topics.SingleOrDefaultAsync(x => x.Uid == uid, cancellationToken);
+        var topic = await dbContext.Topics.Include(x => x.Users).Include(x => x.Posts).SingleOrDefaultAsync(x => x.Uid == uid, cancellationToken);
 
         if (topic == null)
         {

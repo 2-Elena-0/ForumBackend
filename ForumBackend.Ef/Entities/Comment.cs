@@ -17,8 +17,6 @@ public partial class Comment
 
     public Guid Post { get; set; }
 
-    public long Likes { get; set; }
-
     public virtual User CreatedByNavigation { get; set; } = null!;
 
     public virtual Post PostNavigation { get; set; } = null!;

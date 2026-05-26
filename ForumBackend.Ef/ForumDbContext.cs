@@ -49,7 +49,6 @@ public partial class ForumDbContext : DbContext
                 .HasColumnType("time with time zone")
                 .HasColumnName("created_at");
             entity.Property(e => e.CreatedBy).HasColumnName("created_by");
-            entity.Property(e => e.Likes).HasColumnName("likes");
             entity.Property(e => e.Post).HasColumnName("post");
             entity.Property(e => e.Uid)
                 .HasDefaultValueSql("gen_random_uuid()")
