@@ -16,35 +16,36 @@ namespace ForumBackend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class UserController(IUserService userService, ILogger<UserController> logger, IConfiguration _configuration) : ControllerBase
+public class UserController(IUserService userService, ILogger<UserController> logger, IConfiguration _configuration)
+    : ControllerBase
 {
     private Claim[] claims;
-    
-    [NonAction] 
-    public string TokenGenerate(string uid, string email) 
-    { 
-        Console.WriteLine($"Cofiguration: {_configuration["Jwt:Key"]}"); 
-        claims = new[] 
-        { 
-            new Claim(ClaimTypes.NameIdentifier, uid), 
-            new Claim(ClaimTypes.Email, email), 
-        }; 
-        var key = new SymmetricSecurityKey( 
-            Encoding.UTF8.GetBytes(_configuration["Jwt:Key"])); 
- 
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256); 
- 
-        var token = new JwtSecurityToken( 
-            issuer: _configuration["Jwt:Issuer"], 
-            audience: _configuration["Jwt:Audience"], 
-            claims: claims, 
-            expires: DateTime.Now.AddMinutes(60), 
-            signingCredentials: creds); 
- 
-        var resToken = new JwtSecurityTokenHandler().WriteToken(token); 
-        return resToken; 
-    } 
-    
+
+    [NonAction]
+    public string TokenGenerate(string uid, string email)
+    {
+        Console.WriteLine($"Cofiguration: {_configuration["Jwt:Key"]}");
+        claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, uid),
+            new Claim(ClaimTypes.Email, email),
+        };
+        var key = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            issuer: _configuration["Jwt:Issuer"],
+            audience: _configuration["Jwt:Audience"],
+            claims: claims,
+            expires: DateTime.Now.AddMinutes(60),
+            signingCredentials: creds);
+
+        var resToken = new JwtSecurityTokenHandler().WriteToken(token);
+        return resToken;
+    }
+
     [HttpGet]
     public async Task<ActionResult<UserResponseContract[]>> GetAll(CancellationToken cancellationToken)
     {
@@ -76,7 +77,7 @@ public class UserController(IUserService userService, ILogger<UserController> lo
 
         return Ok(user);
     }
-    
+
     [UserExceptionFilter]
     [HttpPost("login")]
     public async Task<ActionResult> GetByUid([FromBody] UserLoginContract request, CancellationToken cancellationToken)
@@ -98,12 +99,12 @@ public class UserController(IUserService userService, ILogger<UserController> lo
         }
 
         var token = TokenGenerate(user.Uid.ToString(), user.Email);
-        
+
         logger.LogInformation("User with email {} success verification", user.Email);
 
-        return Ok(new {token = token, uid = user.Uid.ToString()});
+        return Ok(new { token = token, uid = user.Uid.ToString() });
     }
-    
+
     [HttpPost("register")]
     public async Task<ActionResult> Register(
         [FromBody] CreateUserRequestContract request,
@@ -114,11 +115,12 @@ public class UserController(IUserService userService, ILogger<UserController> lo
         var createdUser = await userService.CreateAsync(request, cancellationToken);
 
         var token = TokenGenerate(createdUser.Uid.ToString(), createdUser.Email);
-        
+
         logger.LogInformation("Created user with username: {Username}. User UId: {UId}", createdUser.Name,
             createdUser.Uid);
 
-        return CreatedAtAction(nameof(GetByUid), new { uid = createdUser.Uid }, new { token = token, uid = createdUser.Uid.ToString()});
+        return CreatedAtAction(nameof(GetByUid), new { uid = createdUser.Uid },
+            new { token = token, uid = createdUser.Uid.ToString() });
     }
 
 
@@ -159,31 +161,25 @@ public class UserController(IUserService userService, ILogger<UserController> lo
         return Ok(updatedUser);
     }
 
-    [Authorize]
     [UserExceptionFilter]
     [PostExceptionFilter]
-    [HttpPut("/like/{postId:guid}")]
-    public async Task<ActionResult<UserResponseContract>> Like([FromRoute] Guid postId, CancellationToken cancellationToken)
+    [HttpPut("{uid:guid}/like/{postId:guid}")]
+    public async Task<ActionResult<UserResponseContract>> Like([FromRoute] Guid uid, [FromRoute] Guid postId,
+        CancellationToken cancellationToken)
     {
-        var uidstring = claims[0].Value;
-        if (Guid.TryParse(uidstring, out var uid))
+        logger.LogInformation("User with uid {uid} liking post {postUid}.", uid, postId);
+        var updatedUser = await userService.AddLikePostAsync(uid, postId, cancellationToken);
+
+        if (updatedUser is null)
         {
-            logger.LogInformation("User with uid {uid} liking post {postUid}.", uid, postId);
-            var updatedUser = await userService.AddLikePostAsync(uid, postId, cancellationToken);
-
-            if (updatedUser is null)
-            {
-                logger.LogWarning("User or post not found");
-                return NotFound();
-            }
-        
-            logger.LogInformation("User with uid: {UserUid} updated.", uid);
-            return Ok(updatedUser);
+            logger.LogWarning("User or post not found");
+            return NotFound();
         }
-        return Unauthorized();
 
+        logger.LogInformation("User with uid: {UserUid} updated.", uid);
+        return Ok(updatedUser);
     }
-    
+
     [UserExceptionFilter]
     [PostExceptionFilter]
     [HttpPut("{uid:guid}/favorite/{postId:guid}")]
@@ -198,11 +194,11 @@ public class UserController(IUserService userService, ILogger<UserController> lo
             logger.LogWarning("User or post not found");
             return NotFound();
         }
-        
+
         logger.LogInformation("User with uid: {UserUid} updated.", uid);
         return Ok(updatedUser);
     }
-    
+
     [UserExceptionFilter]
     [PostExceptionFilter]
     [HttpPut("{uid:guid}/removeLike/{postId:guid}")]
@@ -217,11 +213,11 @@ public class UserController(IUserService userService, ILogger<UserController> lo
             logger.LogWarning("User or post not found");
             return NotFound();
         }
-        
+
         logger.LogInformation("User with uid: {UserUid} updated.", uid);
         return Ok(updatedUser);
     }
-    
+
     [UserExceptionFilter]
     [PostExceptionFilter]
     [HttpPut("{uid:guid}/removeFavorite/{postId:guid}")]
@@ -236,11 +232,11 @@ public class UserController(IUserService userService, ILogger<UserController> lo
             logger.LogWarning("User or post not found");
             return NotFound();
         }
-        
+
         logger.LogInformation("User with uid: {UserUid} updated.", uid);
         return Ok(updatedUser);
     }
-    
+
     [UserExceptionFilter]
     [TopicExceptionFilter]
     [HttpPut("{uid:guid}/topic/{topicUid:guid}")]
@@ -255,7 +251,7 @@ public class UserController(IUserService userService, ILogger<UserController> lo
             logger.LogWarning("User or topic not found");
             return NotFound();
         }
-        
+
         logger.LogInformation("User with uid: {uid} updated.", uid);
         return Ok(updatedUser);
     }
@@ -279,7 +275,7 @@ public class UserController(IUserService userService, ILogger<UserController> lo
 
         return NoContent();
     }
-    
+
     [HttpGet("likePost/{uid:guid}")]
     public async Task<IActionResult> GetLikePosts([FromRoute] Guid uid, CancellationToken cancellationToken)
     {
@@ -290,7 +286,7 @@ public class UserController(IUserService userService, ILogger<UserController> lo
         logger.LogInformation("Posts was found: {} count", posts.Count);
         return Ok(posts);
     }
-    
+
     [HttpGet("favoritePost/{uid:guid}")]
     public async Task<IActionResult> GetFavoritesPosts([FromRoute] Guid uid, CancellationToken cancellationToken)
     {
@@ -301,7 +297,7 @@ public class UserController(IUserService userService, ILogger<UserController> lo
         logger.LogInformation("Posts was found: {} count", posts.Count);
         return Ok(posts);
     }
-    
+
     [HttpGet("likePostFull/{uid:guid}")]
     public async Task<IActionResult> GetLikePostsFull([FromRoute] Guid uid, CancellationToken cancellationToken)
     {
@@ -312,7 +308,7 @@ public class UserController(IUserService userService, ILogger<UserController> lo
         logger.LogInformation("Posts was found: {} count", posts.Count);
         return Ok(posts);
     }
-    
+
     [HttpGet("favoritePostFull/{uid:guid}")]
     public async Task<IActionResult> GetFavoritePostsFull([FromRoute] Guid uid, CancellationToken cancellationToken)
     {
